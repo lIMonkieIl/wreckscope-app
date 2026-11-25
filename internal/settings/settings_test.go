@@ -35,6 +35,59 @@ func TestPathInstalledUsesAppData(t *testing.T) {
 	}
 }
 
+func TestWebviewDataDirInstalledStable(t *testing.T) {
+	PathOverride = ""
+	exeDir := t.TempDir()
+	configDir := t.TempDir()
+	lookupExe = func() (string, error) {
+		// Bare updater asset name must not become the WebView profile folder.
+		return filepath.Join(exeDir, "WreckScope-windows-amd64.exe"), nil
+	}
+	lookupUserConfig = func() (string, error) { return configDir, nil }
+	t.Cleanup(func() {
+		lookupExe = os.Executable
+		lookupUserConfig = os.UserConfigDir
+	})
+
+	got, err := WebviewDataDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(configDir, appDataFolder, "webview")
+	if got != want {
+		t.Fatalf("webview=%q want %q", got, want)
+	}
+}
+
+func TestWebviewDataDirPortableBesideExe(t *testing.T) {
+	PathOverride = ""
+	exeDir := t.TempDir()
+	beside := filepath.Join(exeDir, fileName)
+	if err := os.WriteFile(beside, []byte(`{"portable":true}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lookupExe = func() (string, error) {
+		return filepath.Join(exeDir, "WreckScope.exe"), nil
+	}
+	lookupUserConfig = func() (string, error) {
+		t.Fatal("UserConfigDir should not be used in portable mode")
+		return "", nil
+	}
+	t.Cleanup(func() {
+		lookupExe = os.Executable
+		lookupUserConfig = os.UserConfigDir
+	})
+
+	got, err := WebviewDataDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(exeDir, "webview-data")
+	if got != want {
+		t.Fatalf("webview=%q want %q", got, want)
+	}
+}
+
 func TestPathPortableBesideExe(t *testing.T) {
 	PathOverride = ""
 	exeDir := t.TempDir()

@@ -72,7 +72,12 @@
 	}
 
 	function withNormalizedSettings(settings: DetectionSettings): DetectionSettings {
-		return { ...settings, view: normalizeView(settings.view) };
+		return {
+			...settings,
+			view: normalizeView(settings.view),
+			theme: settings.theme || defaults.theme,
+			mode: (settings.mode || defaults.mode) as DisplayMode,
+		};
 	}
 
 	function settingsFormEqual(a: DetectionSettings, b: DetectionSettings) {
@@ -954,9 +959,9 @@
 									>
 										{updateBusy
 											? 'Working…'
-											: updateStatus?.mode === 'installed'
-												? 'Download installer'
-												: 'Install'}
+											: updateStatus?.mode === 'portable'
+												? 'Install'
+												: 'Download installer'}
 									</button>
 								</div>
 							{:else if settingsUpToDate}

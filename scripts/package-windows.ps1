@@ -38,6 +38,12 @@ if (-not $Version) { $Version = "0.0.0" }
 
 $outDir = Join-Path $root "dist\windows"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+# Prior smoke leftovers (extracted portable zip) must not sit beside the bare updater exe.
+Get-ChildItem $outDir -Directory -ErrorAction SilentlyContinue |
+	Where-Object { $_.Name -like '*portable*' } |
+	Remove-Item -Recurse -Force
+$straySettings = Join-Path $outDir "settings.json"
+if (Test-Path $straySettings) { Remove-Item $straySettings -Force }
 
 Write-Host "Building Wails binary + NSIS (windows/$Arch) VERSION=$Version..."
 $env:Path = (Split-Path $makensis) + ";" + $env:Path
@@ -61,8 +67,12 @@ Copy-Item $installer.FullName $installerOut -Force
 Write-Host "Installer: $installerOut"
 
 # Bare exe for in-app updater (portable swap). Do not use *-setup* for binary replace.
+# Running this bare asset alone is installed-mode (AppData) unless settings.json with
+# "portable": true sits beside it — never ship a sibling settings.json next to the bare exe.
 $bareOut = Join-Path $outDir "WreckScope-windows-$Arch.exe"
 Copy-Item $exe $bareOut -Force
+$bareSibling = Join-Path $outDir "settings.json"
+if (Test-Path $bareSibling) { Remove-Item $bareSibling -Force }
 Write-Host "Updater:   $bareOut"
 
 $stage = Join-Path $outDir "portable-stage"

@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"wreckscope/internal/app"
+	"wreckscope/internal/settings"
 	"wreckscope/internal/update"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -15,6 +16,14 @@ var assets embed.FS
 
 func main() {
 	service := app.New(assets)
+
+	windowsOpts := application.WindowsOptions{}
+	if dataDir, err := settings.WebviewDataDir(); err != nil {
+		log.Printf("WebView data dir: %v", err)
+	} else {
+		// Stable profile — bare WreckScope-windows-amd64.exe must not use %AppData%\<exe-name>.
+		windowsOpts.WebviewUserDataPath = dataDir
+	}
 
 	var wailsApp *application.App
 	wailsApp = application.New(application.Options{
@@ -32,6 +41,7 @@ func main() {
 				focusMainWindow(wailsApp)
 			},
 		},
+		Windows: windowsOpts,
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},

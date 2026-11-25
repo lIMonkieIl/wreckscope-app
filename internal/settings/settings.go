@@ -25,7 +25,7 @@ var (
 
 // Path returns settings.json for this install mode.
 // Portable: settings.json beside the exe with "portable": true.
-// Installed / default: %AppData%\WreckScope\settings.json.
+// Installed / bare (no portable flag): %AppData%\WreckScope\settings.json.
 func Path() (string, error) {
 	if PathOverride != "" {
 		return PathOverride, nil
@@ -43,6 +43,27 @@ func Path() (string, error) {
 		return "", err
 	}
 	return filepath.Join(dir, fileName), nil
+}
+
+// WebviewDataDir is a stable WebView2 profile path (not %AppData%\<exe-name>).
+// Portable: <exeDir>\webview-data. Installed/bare: %AppData%\WreckScope\webview.
+func WebviewDataDir() (string, error) {
+	if PathOverride != "" {
+		return filepath.Join(filepath.Dir(PathOverride), "webview"), nil
+	}
+	exe, err := lookupExe()
+	if err != nil {
+		return "", err
+	}
+	exeDir := filepath.Dir(exe)
+	if PortableFile(filepath.Join(exeDir, fileName)) {
+		return filepath.Join(exeDir, "webview-data"), nil
+	}
+	dir, err := dataDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "webview"), nil
 }
 
 // PortableFile is true when path is settings.json with portable: true.

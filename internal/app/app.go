@@ -63,7 +63,13 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 		log.Printf("Find settings file: %v", err)
 	} else if saved, err := settings.Load(path); err == nil {
 		_, _ = a.engine.ApplySettings(saved, nil)
-	} else if !os.IsNotExist(err) {
+	} else if os.IsNotExist(err) {
+		// First run (bare/setup): seed AppData with brand defaults (wreckscope + system).
+		// Portable zip already ships settings.json beside the exe.
+		if saveErr := settings.Save(path, a.engine.Settings()); saveErr != nil {
+			log.Printf("Seed settings: %v", saveErr)
+		}
+	} else {
 		log.Printf("Load settings: %v", err)
 	}
 	a.migrateLegacyTelemetryPath()
