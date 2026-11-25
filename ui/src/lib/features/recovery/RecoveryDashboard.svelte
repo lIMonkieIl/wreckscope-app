@@ -29,12 +29,7 @@
 		type UpdateStatus,
 	} from './updates.ts';
 	import UpdateAvailableBanner from './UpdateAvailableBanner.svelte';
-	import {
-		UPDATE_UX_DEMO,
-		UPDATE_UX_DEMO_LATEST,
-		dismissUpdateVersion,
-		dismissedUpdateVersion,
-	} from './updateUxDemo.ts';
+	import { dismissUpdateVersion, dismissedUpdateVersion } from './updateBannerDismiss.ts';
 	import { Dialog, Popover, Portal, QrCode } from '@skeletonlabs/skeleton-svelte';
 	import ThemePicker from '#lib/features/appearance/ThemePicker.svelte';
 	import { setCommittedDocumentTheme } from '#lib/features/appearance/themeHover.ts';
@@ -213,7 +208,6 @@
 	let updateApplyError = $state('');
 	let updateBannerDismissed = $state(dismissedUpdateVersion());
 	let updateBannerSessionHide = $state(false);
-	let updateBannerBusy = $state(false);
 	/** Optimistic live/demo until the stream confirms. */
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
 	let liveSettings = $derived(withNormalizedSettings(snapshot.settings));
@@ -941,33 +935,20 @@
 		if (settingsUpToDate) return 'up-to-date';
 		return 'idle';
 	});
-	let updateBannerLatest = $derived(
-		UPDATE_UX_DEMO ? UPDATE_UX_DEMO_LATEST : updateStatus?.latest || '',
-	);
+	let updateBannerLatest = $derived(updateStatus?.latest || '');
 	let showUpdateBanner = $derived(
 		!updateBannerSessionHide &&
+			!!desktopBridge &&
+			!!updateStatus?.available &&
 			!!updateBannerLatest &&
-			(UPDATE_UX_DEMO ||
-				(!!desktopBridge &&
-					!!updateStatus?.available &&
-					updateBannerDismissed !== updateBannerLatest)),
+			updateBannerDismissed !== updateBannerLatest,
 	);
 	function laterUpdateBanner() {
 		updateBannerSessionHide = true;
-		if (!UPDATE_UX_DEMO && updateBannerLatest) {
+		if (updateBannerLatest) {
 			dismissUpdateVersion(updateBannerLatest);
 			updateBannerDismissed = updateBannerLatest;
 		}
-	}
-	async function downloadFromBanner() {
-		if (UPDATE_UX_DEMO && !updateStatus?.available) {
-			if (updateBannerBusy) return;
-			updateBannerBusy = true;
-			await new Promise((resolve) => window.setTimeout(resolve, 1200));
-			updateBannerBusy = false;
-			return;
-		}
-		await runUpdateApply();
 	}
 	async function showPhone(open: boolean) {
 		phoneOpen = open;
@@ -999,8 +980,8 @@
 	{#if showUpdateBanner}
 		<UpdateAvailableBanner
 			latest={updateBannerLatest}
-			busy={updateBannerBusy || (updateBusy && settingsUpdateReady)}
-			onDownload={() => void downloadFromBanner()}
+			busy={updateBusy && settingsUpdateReady}
+			onDownload={() => void runUpdateApply()}
 			onLater={laterUpdateBanner}
 		/>
 	{/if}
