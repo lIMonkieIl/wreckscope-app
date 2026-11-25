@@ -59,10 +59,10 @@ Publish both on a GitHub Release. In-app updates download the setup package to `
 Binary-only (no installer):
 
 ```powershell
-wails3 task build VERSION=0.1.0
+wails3 task build VERSION=0.1.3
 ```
 
-Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`).
+Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`) and stamped into Windows `info.json` / NSIS `DisplayVersion` by `scripts/stamp-windows-version.ps1` (single source: `build/config.yml` `info.version` unless `-Version` is passed).
 
 ## Data locations
 
@@ -70,9 +70,11 @@ Install dir (Program Files) holds binaries only.
 
 Everything else under `%AppData%\WreckScope\`:
 
-- `settings.json` — app settings
+- `settings.json` — app settings (survives upgrade; uninstall removes this folder)
 - `webview\` — WebView2 profile
 - `updates\` — downloaded setup packages for in-app update
+
+First-run with no `settings.json` seeds theme `wreckscope` and mode `system`. Upgrading over an existing install keeps the previous settings.
 
 Game telemetry `config.json` stays under `My Games\Wreckfest 2\...\savegame\telemetry\`. WreckScope can enable UDP on `127.0.0.1:23123` and keeps a sibling backup before writing.
 

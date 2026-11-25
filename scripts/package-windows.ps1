@@ -43,6 +43,10 @@ Get-ChildItem $outDir -Directory -ErrorAction SilentlyContinue |
 	Where-Object { $_.Name -like '*portable*' } |
 	Remove-Item -Recurse -Force
 
+Write-Host "Stamping Windows version metadata ($Version)..."
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\stamp-windows-version.ps1") -Version $Version -Root $root
+if ($LASTEXITCODE -ne 0) { throw "stamp-windows-version failed ($LASTEXITCODE)" }
+
 Write-Host "Building Wails binary + NSIS (windows/$Arch) VERSION=$Version..."
 $env:Path = (Split-Path $makensis) + ";" + $env:Path
 # wails3/task may write harmless stderr (e.g. missing uname on Windows); only exit code matters.
@@ -70,4 +74,9 @@ $sumsPath = Join-Path $outDir "SHA256SUMS"
 $hash = (Get-FileHash -Algorithm SHA256 -Path $installerOut).Hash.ToLowerInvariant()
 [System.IO.File]::WriteAllText($sumsPath, "$hash  $(Split-Path $installerOut -Leaf)`n", $utf8NoBom)
 Write-Host "Checksums: $sumsPath"
+
+Write-Host "Verifying package version stamps..."
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\verify-windows-package.ps1") -Version $Version -Root $root -Arch $Arch
+if ($LASTEXITCODE -ne 0) { throw "verify-windows-package failed ($LASTEXITCODE)" }
+
 Write-Host "Done."

@@ -4,7 +4,7 @@ vars:
   APP_NAME: "WreckScope"
   BIN_DIR: "bin"
   # Keep in sync with build/config.yml info.version (also baked via ldflags).
-  VERSION: '{{.VERSION | default "0.1.0"}}'
+  VERSION: '{{.VERSION | default "0.1.3"}}'
   PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "pnpm"}}'
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
   # Target OS for build/package/run. Defaults to the host OS, and is overridden
