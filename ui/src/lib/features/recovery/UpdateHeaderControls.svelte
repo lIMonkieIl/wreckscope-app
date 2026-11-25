@@ -29,6 +29,7 @@
 
 	let checking = $derived(phase === 'checking');
 	let downloading = $derived(phase === 'downloading');
+	let downloadVersion = $derived(`v${(latest || 'update').replace(/^v/i, '')}`);
 	let versionClass = $derived(
 		phase === 'error'
 			? 'text-error-500'
@@ -49,11 +50,18 @@
 	{#if phase === 'available'}
 		<button
 			type="button"
-			class="btn preset-filled-primary-500 btn-sm"
+			class="btn preset-filled-primary-500 btn-xs gap-0 overflow-hidden p-0"
 			disabled={!interactive}
+			aria-label={`Download ${downloadVersion}`}
+			title={`Download ${downloadVersion}`}
 			onclick={() => onDownload?.()}
 		>
-			Download {latest || 'update'}
+			<span
+				class="inline-flex items-center justify-center border-r border-white/25 px-1.5 py-0.5"
+			>
+				<ControlIcon name="download" />
+			</span>
+			<span class="px-1.5 font-mono text-[0.7rem] leading-none">{downloadVersion}</span>
 		</button>
 	{/if}
 	{#if downloading}
