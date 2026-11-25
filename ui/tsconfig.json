@@ -18,8 +18,8 @@
     "src/**/*.ts",
     "src/**/*.js",
     "src/**/*.svelte",
-    "wailsjs/**/*.ts",
-    "wailsjs/**/*.js"
+    "bindings/**/*.ts",
+    "bindings/**/*.js"
   ],
   "references": [
     {

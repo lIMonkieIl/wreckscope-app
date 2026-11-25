@@ -18,7 +18,7 @@ export default defineConfig({
   clearScreen: false,
   server: {
     strictPort: true,
-    // Wails webview loads via wails.localhost during `wails dev`
+    // Wails webview loads via wails.localhost during `wails3 task dev`
     allowedHosts: ['.localhost', 'wails.localhost'],
   },
 })

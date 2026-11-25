@@ -12,12 +12,11 @@ export type TelemetrySetup = {
 const OPEN_SETTINGS_EVENT = 'wreckscope-open-settings';
 
 export function hasDesktopBridge(): boolean {
-	const go = (window as unknown as { go?: { app?: { App?: unknown } } }).go;
-	return !!go?.app?.App;
+	return !!(window as unknown as { _wails?: unknown })._wails;
 }
 
 async function loadBindings() {
-	return import('../../../../wailsjs/go/app/App.js');
+	return import('../../../../bindings/wreckscope/internal/app/app.js');
 }
 
 function asSetup(value: Record<string, unknown>): TelemetrySetup {

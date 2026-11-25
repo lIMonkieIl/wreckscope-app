@@ -12,3 +12,12 @@ settings.json
 Thumbs.db
 
 ui/package.json.md5
+
+bin/
+
+
+build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+
+
+.task/
+

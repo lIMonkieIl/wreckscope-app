@@ -1,8 +1,8 @@
 ﻿# Build Windows NSIS installer (default) and portable zip.
-# Requires: Go, pnpm, Wails CLI, NSIS (makensis on PATH or under Program Files).
+# Requires: Go, pnpm, Wails CLI v3 (wails3), NSIS (makensis on PATH or under Program Files).
 param(
 	[string]$Version = "",
-	[string]$Platform = "windows/amd64"
+	[string]$Arch = "amd64"
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,25 +29,32 @@ if (-not $makensis) {
 Write-Host "makensis: $makensis"
 
 if (-not $Version) {
-	$wails = Get-Content (Join-Path $root "wails.json") -Raw | ConvertFrom-Json
-	$Version = [string]$wails.info.productVersion
+	$cfg = Get-Content (Join-Path $root "build\config.yml") -Raw
+	if ($cfg -match '(?m)^\s*version:\s*"([^"]+)"') {
+		$Version = $Matches[1]
+	}
 }
 if (-not $Version) { $Version = "0.0.0" }
 
 $outDir = Join-Path $root "dist\windows"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
-Write-Host "Building Wails binary + NSIS ($Platform)..."
+Write-Host "Building Wails binary + NSIS (windows/$Arch)..."
 $env:Path = (Split-Path $makensis) + ";" + $env:Path
-wails build -platform $Platform -nsis -webview2 download
-if ($LASTEXITCODE -ne 0) { throw "wails build failed ($LASTEXITCODE)" }
+# wails3/task may write harmless stderr (e.g. missing uname on Windows); only exit code matters.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& wails3 task windows:package "ARCH=$Arch"
+$packExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($packExit -ne 0) { throw "wails3 package failed ($packExit)" }
 
-$binDir = Join-Path $root "build\bin"
+$binDir = Join-Path $root "bin"
 $exe = Join-Path $binDir "WreckScope.exe"
 if (-not (Test-Path $exe)) { throw "missing $exe" }
 
 $installer = Get-ChildItem $binDir -Filter "*-installer.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-if (-not $installer) { throw "NSIS installer not found under build\bin" }
+if (-not $installer) { throw "NSIS installer not found under bin" }
 
 $installerOut = Join-Path $outDir "WreckScope-$Version-windows-amd64-setup.exe"
 Copy-Item $installer.FullName $installerOut -Force

@@ -16,15 +16,16 @@ import (
 	"wreckscope/internal/setup"
 	"wreckscope/internal/wf2"
 
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 const defaultUDPPort = 23123
 const defaultHTTPPort = 8080
 
-// App is the Wails backend.
+// App is the Wails backend service.
 type App struct {
 	ctx      context.Context
+	wails    *application.App
 	engine   *racefeed.Engine
 	signal   chan struct{}
 	udpPort  int
@@ -48,7 +49,8 @@ func New(assets embed.FS) *App {
 	}
 }
 
-func (a *App) Startup(ctx context.Context) {
+func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) error {
+	a.wails = application.Get()
 	runCtx, cancel := context.WithCancel(ctx)
 	a.ctx = runCtx
 	a.cancel = cancel
@@ -80,9 +82,10 @@ func (a *App) Startup(ctx context.Context) {
 		defer a.wg.Done()
 		a.startHTTP(runCtx)
 	}()
+	return nil
 }
 
-func (a *App) Shutdown(ctx context.Context) {
+func (a *App) ServiceShutdown() error {
 	if a.cancel != nil {
 		a.cancel()
 	}
@@ -93,9 +96,9 @@ func (a *App) Shutdown(ctx context.Context) {
 	}()
 	select {
 	case <-done:
-	case <-ctx.Done():
 	case <-time.After(2 * time.Second):
 	}
+	return nil
 }
 
 func (a *App) notify() {
@@ -184,11 +187,11 @@ func (a *App) emitLoop(ctx context.Context) {
 		case <-refresh.C:
 			dirty = true
 		case <-frame.C:
-			if !dirty || a.ctx == nil {
+			if !dirty || a.wails == nil {
 				continue
 			}
 			dirty = false
-			runtime.EventsEmit(a.ctx, "telemetry", a.engine.Snapshot())
+			a.wails.Event.Emit("telemetry", a.engine.Snapshot())
 		}
 	}
 }
@@ -204,15 +207,15 @@ func (a *App) ToggleMedic(slot int) []int {
 	return medics
 }
 
-// demoFeaturesEnabled: `dev` build tag or Wails BuildType "dev". Off in release.
+// demoFeaturesEnabled: `dev` build tag or non-production (debug) Wails build. Off in release.
 func (a *App) demoFeaturesEnabled() bool {
 	if buildAllowsDemo() {
 		return true
 	}
-	if a.ctx == nil {
+	if a.wails == nil {
 		return false
 	}
-	return runtime.Environment(a.ctx).BuildType == "dev"
+	return a.wails.Env.Info().Debug
 }
 
 // SetMode switches live/demo. Demo rejected outside development builds.
@@ -270,10 +273,10 @@ func (a *App) CompleteSetup() (map[string]interface{}, error) {
 }
 
 func (a *App) emitSettings(settings racefeed.Settings) {
-	if a.ctx == nil {
+	if a.wails == nil {
 		return
 	}
-	runtime.EventsEmit(a.ctx, "settings", settings)
+	a.wails.Event.Emit("settings", settings)
 }
 
 // PhoneAccess: LAN phone URLs for the Device view QR. Full app, not view-only.
@@ -406,13 +409,11 @@ func (a *App) ResetTelemetrySetup() (map[string]interface{}, error) {
 }
 
 func (a *App) BrowseTelemetryConfig() (string, error) {
-	if a.ctx == nil {
+	if a.wails == nil {
 		return "", errNoAppContext
 	}
-	return runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Telemetry config.json",
-		Filters: []runtime.FileFilter{
-			{DisplayName: "JSON (*.json)", Pattern: "*.json"},
-		},
-	})
+	return a.wails.Dialog.OpenFile().
+		SetTitle("Telemetry config.json").
+		AddFilter("JSON (*.json)", "*.json").
+		PromptForSingleSelection()
 }

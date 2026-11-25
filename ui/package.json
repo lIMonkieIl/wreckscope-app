@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:dev": "vite build --minify false --mode development",
+    "build": "vite build --mode production",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
     "@skeletonlabs/skeleton": "5.0.6",
     "@skeletonlabs/skeleton-svelte": "5.0.6",
+    "@wailsio/runtime": "3.1.0",
     "svelte": "^5.55.7"
   },
   "devDependencies": {

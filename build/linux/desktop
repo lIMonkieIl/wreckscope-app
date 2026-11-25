@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=WreckScope
+Comment=A wreckscope-ref application
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/wreckscope-ref.exe %u
+Terminal=false
+Type=Application
+Icon=wreckscope-ref.exe
+Categories=Utility;
+StartupWMClass=wreckscope-ref.exe
+
+ 

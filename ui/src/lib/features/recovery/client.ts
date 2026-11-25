@@ -16,14 +16,13 @@ function publishSettings(settings: DetectionSettings | undefined) {
 }
 
 function hasWails(): boolean {
-	const go = (window as unknown as { go?: { app?: { App?: unknown } } }).go;
-	return !!go?.app?.App;
+	return !!(window as unknown as { _wails?: unknown })._wails;
 }
 
 async function loadBindings() {
-	const app = await import('../../../../wailsjs/go/app/App.js');
-	const runtime = await import('../../../../wailsjs/runtime/runtime.js');
-	return { app, runtime };
+	const app = await import('../../../../bindings/wreckscope/internal/app/app.js');
+	const { Events } = await import('@wailsio/runtime');
+	return { app, Events };
 }
 
 async function postJSON(route: 'mode' | 'settings' | 'appearance' | 'medic', payload: unknown) {
@@ -49,9 +48,10 @@ export function subscribeTelemetry(
 	(async () => {
 		try {
 			if (hasWails()) {
-				const { app, runtime } = await loadBindings();
-				unsubscribe = runtime.EventsOn('telemetry', (snapshot: TelemetrySnapshot) => {
+				const { app, Events } = await loadBindings();
+				unsubscribe = Events.On('telemetry', (event) => {
 					if (cancelled) return;
+					const snapshot = event.data as TelemetrySnapshot;
 					publishSettings(snapshot.settings);
 					onSnapshot(snapshot);
 				});
@@ -159,9 +159,9 @@ export function subscribeSettings(onSettings: SettingsListener) {
 	(async () => {
 		try {
 			if (hasWails()) {
-				const { app, runtime } = await loadBindings();
-				unsubscribe = runtime.EventsOn('settings', (settings: DetectionSettings) => {
-					if (!cancelled) onSettings(settings);
+				const { app, Events } = await loadBindings();
+				unsubscribe = Events.On('settings', (event) => {
+					if (!cancelled) onSettings(event.data as DetectionSettings);
 				});
 				const initial = (await app.GetSettings()) as DetectionSettings;
 				if (!cancelled) onSettings(initial);

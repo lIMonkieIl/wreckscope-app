@@ -14,6 +14,9 @@ importers:
       '@skeletonlabs/skeleton-svelte':
         specifier: 5.0.6
         version: 5.0.6(svelte@5.59.1)
+      '@wailsio/runtime':
+        specifier: 3.1.0
+        version: 3.1.0
       svelte:
         specifier: ^5.55.7
         version: 5.59.1
@@ -335,6 +338,9 @@ packages:
 
   '@types/node@24.19.2':
     resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
+
+  '@wailsio/runtime@3.1.0':
+    resolution: {integrity: sha512-noEAedvRyO8TLCrqhGwzrp+mbMxAIDa2rYmdJQOzvJV9MxgaZeXAJGNBiMiKMTSSy4ESOtQi4VH/5heSzi6ZmA==}
 
   '@zag-js/accordion@1.48.0':
     resolution: {integrity: sha512-VVQrvRC1/+Dd3ZU5otObwoocPcJYko8HYpjayvaD3vDXXwSDENevYCJCAISYIvaVD3FrvOX0IXJghFUxDcmGaQ==}
@@ -1034,6 +1040,8 @@ snapshots:
   '@types/node@24.19.2':
     dependencies:
       undici-types: 7.24.6
+
+  '@wailsio/runtime@3.1.0': {}
 
   '@zag-js/accordion@1.48.0':
     dependencies:

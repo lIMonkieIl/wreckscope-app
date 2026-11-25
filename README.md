@@ -2,13 +2,14 @@
 
 Live recovery dashboard for Wreckfest 2. Watches the race feed, flags stuck cars, and shows the grid on a map — on PC and on a phone over LAN.
 
-Built with [Wails](https://wails.io) (Go + Svelte). Windows installer (default) or portable zip.
+Built with [Wails v3](https://wails.io) (Go + Svelte). Windows installer (default) or portable zip.
 
 ## Requirements
 
 - Go 1.27+
 - Node 24 and pnpm 11
-- [Wails CLI v2](https://wails.io/docs/gettingstarted/installation)
+- [Wails CLI v3](https://v3.wails.io/getting-started/installation/) (`wails3`)
+- [Task](https://taskfile.dev) (used by `wails3 task`)
 - WebView2 (Windows)
 - [NSIS](https://nsis.sourceforge.io) (`makensis`) for the installer
 
@@ -16,10 +17,12 @@ Built with [Wails](https://wails.io) (Go + Svelte). Windows installer (default) 
 
 ```powershell
 pnpm --dir ui install
-wails dev -tags dev
+wails3 task build DEV=true
+wails3 task run
+# or: wails3 task dev
 ```
 
-Demo mode is available in this build only.
+Demo mode is available in non-production (debug) builds, or with `-tags dev`.
 
 ## Build
 
@@ -37,8 +40,10 @@ Outputs under `dist\windows\`:
 Binary-only (no installer):
 
 ```powershell
-wails build
+wails3 task build
 ```
+
+Artifacts land in `bin\`.
 
 ## Settings
 
@@ -52,9 +57,10 @@ LAN dashboard listens on TCP `8080` by default. Use Device view for the phone QR
 ## Layout
 
 ```
-main.go          Wails entry (embeds ui/dist)
+main.go          Wails v3 entry (embeds ui/dist)
 internal/        app, settings, setup, racefeed, recovery, wf2
-ui/              Svelte UI
-build/           icons and packaging
+ui/              Svelte UI + generated bindings/
+build/           Taskfiles, config.yml, icons, NSIS
 scripts/         Windows package script
+bin/             build output
 ```
