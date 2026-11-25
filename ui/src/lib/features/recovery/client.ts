@@ -4,6 +4,7 @@ import type {
 	PhoneAccess,
 	TelemetrySnapshot,
 } from './telemetry.ts';
+import { hasDesktopBridge, whenDesktopRuntimeReady } from './desktopBridge.ts';
 
 type TelemetryListener = (snapshot: TelemetrySnapshot) => void;
 type SettingsListener = (settings: DetectionSettings) => void;
@@ -15,8 +16,10 @@ function publishSettings(settings: DetectionSettings | undefined) {
 	for (const listener of settingsListeners) listener(settings);
 }
 
-function hasWails(): boolean {
-	return !!(window as unknown as { _wails?: unknown })._wails;
+/** Desktop WebView with native IPC ready (not LAN phone). */
+async function useDesktopBridge(): Promise<boolean> {
+	if (!hasDesktopBridge()) return false;
+	return whenDesktopRuntimeReady();
 }
 
 async function loadBindings() {
@@ -47,7 +50,8 @@ export function subscribeTelemetry(
 
 	(async () => {
 		try {
-			if (hasWails()) {
+			if (await useDesktopBridge()) {
+				if (cancelled) return;
 				const { app, Events } = await loadBindings();
 				unsubscribe = Events.On('telemetry', (event) => {
 					if (cancelled) return;
@@ -99,7 +103,7 @@ export function subscribeTelemetry(
 }
 
 export async function setMode(mode: TelemetrySnapshot['mode']) {
-	if (hasWails()) {
+	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
 		await app.SetMode(mode);
 		return;
@@ -109,7 +113,7 @@ export async function setMode(mode: TelemetrySnapshot['mode']) {
 
 /** Assign or clear a medic (PC + LAN; no cap). */
 export async function toggleMedic(slot: number): Promise<number[]> {
-	if (hasWails()) {
+	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
 		return (await app.ToggleMedic(slot)) as number[];
 	}
@@ -118,7 +122,7 @@ export async function toggleMedic(slot: number): Promise<number[]> {
 }
 
 export async function saveDetectionSettings(settings: DetectionSettings) {
-	if (hasWails()) {
+	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
 		const saved = (await app.SaveSettings(settings)) as DetectionSettings;
 		publishSettings(saved);
@@ -130,7 +134,7 @@ export async function saveDetectionSettings(settings: DetectionSettings) {
 }
 
 export async function getSettings(): Promise<DetectionSettings> {
-	if (hasWails()) {
+	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
 		return (await app.GetSettings()) as DetectionSettings;
 	}
@@ -140,7 +144,7 @@ export async function getSettings(): Promise<DetectionSettings> {
 }
 
 export async function saveAppearance(appearance: AppearanceSettings) {
-	if (hasWails()) {
+	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
 		const saved = (await app.SaveAppearance(appearance.theme, appearance.mode)) as DetectionSettings;
 		publishSettings(saved);
@@ -158,7 +162,8 @@ export function subscribeSettings(onSettings: SettingsListener) {
 
 	(async () => {
 		try {
-			if (hasWails()) {
+			if (await useDesktopBridge()) {
+				if (cancelled) return;
 				const { app, Events } = await loadBindings();
 				unsubscribe = Events.On('settings', (event) => {
 					if (!cancelled) onSettings(event.data as DetectionSettings);
@@ -183,7 +188,7 @@ export function subscribeSettings(onSettings: SettingsListener) {
 }
 
 export async function getPhoneAccess(): Promise<PhoneAccess> {
-	if (hasWails()) {
+	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
 		return (await app.PhoneAccess()) as PhoneAccess;
 	}

@@ -9,13 +9,16 @@ export type TelemetrySetup = {
 	error: string;
 };
 
+import { hasDesktopBridge, whenDesktopRuntimeReady } from './desktopBridge.ts';
+
+export { hasDesktopBridge };
+
 const OPEN_SETTINGS_EVENT = 'wreckscope-open-settings';
 
-export function hasDesktopBridge(): boolean {
-	return !!(window as unknown as { _wails?: unknown })._wails;
-}
-
 async function loadBindings() {
+	if (!(await whenDesktopRuntimeReady())) {
+		throw new Error('desktop bridge unavailable');
+	}
 	return import('../../../../bindings/wreckscope/internal/app/app.js');
 }
 

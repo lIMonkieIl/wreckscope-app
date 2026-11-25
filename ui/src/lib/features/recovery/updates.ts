@@ -1,3 +1,5 @@
+import { whenDesktopRuntimeReady } from './desktopBridge.ts';
+
 export type UpdateStatus = {
 	current: string;
 	latest: string;
@@ -22,6 +24,9 @@ function asStatus(value: Record<string, unknown> | null | undefined): UpdateStat
 }
 
 async function loadApp() {
+	if (!(await whenDesktopRuntimeReady())) {
+		throw new Error('desktop bridge unavailable');
+	}
 	return import('../../../../bindings/wreckscope/internal/app/app.js');
 }
 
@@ -50,6 +55,7 @@ export function onUpdateAvailable(handler: (status: UpdateStatus) => void) {
 	let unsubscribe: (() => void) | undefined;
 	(async () => {
 		try {
+			if (!(await whenDesktopRuntimeReady()) || cancelled) return;
 			const { Events } = await import('@wailsio/runtime');
 			if (cancelled) return;
 			unsubscribe = Events.On('update-available', (event) => {

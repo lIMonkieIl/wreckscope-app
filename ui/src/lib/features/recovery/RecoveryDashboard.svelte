@@ -18,6 +18,7 @@
 		probeTelemetryAt,
 		restoreTelemetryBackup,
 	} from './telemetrySetup.ts';
+	import { onDesktopBridgeChange } from './desktopBridge.ts';
 	import {
 		applyUpdate,
 		checkForUpdates,
@@ -148,10 +149,12 @@
 	let settingsOpen = $state(false),
 		phoneOpen = $state(false);
 	let streamReady = $state(false);
+	/** Reactive: Windows injects `_wails` after first paint; chrome.webview is early. */
+	let desktopBridge = $state(hasDesktopBridge());
 	let speedUnit = $derived(snapshot.settings.speedUnit ?? 'km/h');
 	// Phone: veil while desktop setup unfinished or stream down.
 	let phoneVeil = $derived(
-		!hasDesktopBridge() &&
+		!desktopBridge &&
 			(snapshot.connection === 'offline' ||
 				(streamReady && !snapshot.settings.setupCompleted)),
 	);
@@ -195,12 +198,12 @@
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
 	let liveSettings = $derived(withNormalizedSettings(snapshot.settings));
 	/** Desktop first-run UX while setupCompleted is false (independent of stream). */
-	let firstRunSetup = $derived(hasDesktopBridge() && !liveSettings.setupCompleted);
+	let firstRunSetup = $derived(desktopBridge && !liveSettings.setupCompleted);
 	/** Desktop first-run: keep Settings open until setupCompleted. */
 	let setupIncomplete = $derived(firstRunSetup && streamReady);
 	/** Desktop: bad/missing Config → open Settings and highlight. */
 	let configNeedsAttention = $derived(
-		hasDesktopBridge() && streamReady && configProbed && !configLooksReady,
+		desktopBridge && streamReady && configProbed && !configLooksReady,
 	);
 	/** First-run or broken Config: emphasize the Config section. */
 	let configHighlighted = $derived(firstRunSetup || configNeedsAttention);
@@ -496,7 +499,7 @@
 			},
 			() => {
 				// Phone SSE: full reload on reconnect so we don't resume stale UI.
-				if (hasDesktopBridge()) return;
+				if (desktopBridge) return;
 				location.reload();
 			},
 		);
@@ -517,20 +520,25 @@
 		const stopUpdateNotice = onUpdateAvailable((status) => {
 			updateStatus = status;
 		});
-		if (hasDesktopBridge()) {
+		const loadDesktopExtras = () => {
 			void getAppVersion().then((v) => {
 				appVersion = v;
 			});
 			void lastUpdateStatus().then((status) => {
 				if (status.available || status.message) updateStatus = status;
 			});
-		}
+		};
+		const stopDesktopBridge = onDesktopBridgeChange((desktop) => {
+			desktopBridge = desktop;
+			if (desktop) loadDesktopExtras();
+		});
 		return () => {
 			compact.removeEventListener('change', syncLayout);
 			orientation.removeEventListener('change', syncOrientation);
 			colorScheme.removeEventListener('change', syncColorScheme);
 			stopOpenSettings();
 			stopUpdateNotice();
+			stopDesktopBridge();
 			unsubscribe();
 			map?.destroy();
 			document.removeEventListener('click', unlock);
@@ -572,7 +580,7 @@
 		}
 	}
 	async function markSetupComplete() {
-		if (!hasDesktopBridge() || snapshot.settings.setupCompleted) return;
+		if (!desktopBridge || snapshot.settings.setupCompleted) return;
 		try {
 			await completeSetup();
 			snapshot = {
@@ -620,7 +628,7 @@
 	}
 
 	async function loadConfigSection() {
-		if (!hasDesktopBridge()) return;
+		if (!desktopBridge) return;
 		try {
 			const status = await probeTelemetry();
 			applyConfigStatus(status, snapshot.settings.telemetryConfigPath || '');
@@ -640,7 +648,7 @@
 	async function editSettings(open: boolean) {
 		if (!open) {
 			// User finished / dismissed first-run (or normal Settings).
-			if (hasDesktopBridge() && !snapshot.settings.setupCompleted) {
+			if (desktopBridge && !snapshot.settings.setupCompleted) {
 				await markSetupComplete();
 			}
 			settingsOpen = false;
@@ -654,7 +662,7 @@
 	}
 
 	$effect(() => {
-		if (!hasDesktopBridge() || !streamReady) return;
+		if (!desktopBridge || !streamReady) return;
 		const needsSettings = setupIncomplete || configNeedsAttention;
 		if (needsSettings && !settingsOpen) {
 			settingsOpen = true;
@@ -739,7 +747,7 @@
 		});
 	}
 	async function browseConfigFile() {
-		if (!hasDesktopBridge() || configBusy) return;
+		if (!desktopBridge || configBusy) return;
 		configBusy = true;
 		configNotice = '';
 		try {
@@ -760,7 +768,7 @@
 	}
 
 	async function findConfigFile() {
-		if (!hasDesktopBridge() || configBusy) return;
+		if (!desktopBridge || configBusy) return;
 		configBusy = true;
 		configNotice = '';
 		try {
@@ -788,7 +796,7 @@
 	}
 
 	async function configureTelemetryFile() {
-		if (!hasDesktopBridge() || !configValid) return;
+		if (!desktopBridge || !configValid) return;
 		const path = configPath.trim();
 		if (!path) return;
 		configBusy = true;
@@ -810,7 +818,7 @@
 	}
 
 	async function restoreTelemetryFromBackup() {
-		if (!hasDesktopBridge()) return;
+		if (!desktopBridge) return;
 		configBusy = true;
 		configNotice = '';
 		try {
@@ -829,7 +837,7 @@
 	}
 
 	async function runUpdateCheck() {
-		if (!hasDesktopBridge() || updateBusy) return;
+		if (!desktopBridge || updateBusy) return;
 		updateBusy = true;
 		try {
 			updateStatus = await checkForUpdates();
@@ -847,7 +855,7 @@
 	}
 
 	async function runUpdateApply() {
-		if (!hasDesktopBridge() || updateBusy || !updateStatus?.available) return;
+		if (!desktopBridge || updateBusy || !updateStatus?.available) return;
 		updateBusy = true;
 		try {
 			updateStatus = await applyUpdate();
@@ -945,7 +953,7 @@
 					{/if}
 					<div class="grid min-w-0 gap-6 @[48rem]:grid-cols-2 @[48rem]:gap-8">
 						<div class="min-w-0 space-y-6">
-							{#if hasDesktopBridge()}
+							{#if desktopBridge}
 								<section
 									bind:this={configSectionEl}
 									class="config-section min-w-0 space-y-3"
@@ -1076,7 +1084,7 @@
 								/>
 							</section>
 
-							{#if hasDesktopBridge()}
+							{#if desktopBridge}
 								<section
 									class="min-w-0 space-y-3"
 									class:settings-secondary={settingsSecondary}
