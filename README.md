@@ -66,7 +66,7 @@ Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`) and 
 
 ## Data locations
 
-Install dir (Program Files) holds binaries only.
+Install dir (`C:\Program Files\WreckScope`) holds binaries only. Uninstall removes that folder and `%AppData%\WreckScope\`.
 
 Everything else under `%AppData%\WreckScope\`:
 

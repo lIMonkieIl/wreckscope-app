@@ -81,7 +81,8 @@ OutFile "..\..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe"
 !if "${WAILS_INSTALL_SCOPE}" == "user"
   InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}"
 !else
-  InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
+  # Flat install dir — avoid Program Files\WreckScope\WreckScope nesting.
+  InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}"
 !endif
 ShowInstDetails show
 
@@ -121,15 +122,31 @@ Section
 SectionEnd
 
 Section "uninstall"
-    !insertmacro wails.setShellContext
+    # Stop a running instance so files/folders are not locked.
+    nsExec::ExecToLog 'taskkill /F /IM ${PRODUCT_EXECUTABLE}'
+    Pop $0
+    Sleep 500
 
-    # Settings live in %AppData%\WreckScope\ (INFO_PRODUCTNAME).
-    RMDir /r "$AppData\${INFO_PRODUCTNAME}"
+    # User data is always under the current user's Roaming AppData.
+    # Machine installs use SetShellVarContext all, which would make $APPDATA
+    # point at ProgramData and miss %AppData%\WreckScope entirely.
+    SetShellVarContext current
+    RMDir /r "$APPDATA\${INFO_PRODUCTNAME}"
 
+    # Install tree: current flat path, plus legacy nested company\product.
     RMDir /r $INSTDIR
+    RMDir /r "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
+    RMDir "$PROGRAMFILES64\${INFO_COMPANYNAME}"
 
+    # Start Menu shortcut is all-users on machine installs.
+    SetShellVarContext all
     Delete "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk"
     Delete "$DESKTOP\${INFO_PRODUCTNAME}.lnk"
+
+    # Finish-page desktop shortcut was created with current-user context.
+    SetShellVarContext current
+    Delete "$DESKTOP\${INFO_PRODUCTNAME}.lnk"
+    Delete "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk"
 
     !insertmacro wails.unassociateFiles
     !insertmacro wails.unassociateCustomProtocols
