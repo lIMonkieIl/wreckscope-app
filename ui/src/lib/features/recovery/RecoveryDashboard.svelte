@@ -191,6 +191,11 @@
 	let configNeedsAttention = $derived(
 		hasDesktopBridge() && streamReady && configProbed && !configLooksReady,
 	);
+	/** First-run or broken Config: emphasize the Config section. */
+	let configHighlighted = $derived(setupIncomplete || configNeedsAttention);
+	/** Soften other Settings sections until telemetry Config is ready on first run. */
+	let settingsSecondary = $derived(setupIncomplete && !configLooksReady);
+	let settingsDialogTitle = $derived(setupIncomplete ? 'Set up WreckScope' : 'Settings');
 	/** Dim dash until Config is ready; header stays usable. */
 	let configSmoke = $derived(configNeedsAttention);
 	let dashSmoked = $derived(phoneVeil || configSmoke);
@@ -866,8 +871,17 @@
 				<Dialog.Trigger class="btn-icon preset-ghost" aria-label="Settings" title="Settings"
 					><ControlIcon name="settings" /></Dialog.Trigger
 				>
-				<ResponsiveDialogContent title="Settings" width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl">
+				<ResponsiveDialogContent
+					title={settingsDialogTitle}
+					width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
+				>
 					<div class="@container min-w-0 w-full">
+					{#if setupIncomplete}
+						<p class="mb-5 text-sm text-surface-700-300">
+							Connect Wreckfest 2 telemetry so the live feed can start. Find or choose the game’s
+							<code class="font-mono text-xs">config.json</code>, then Configure if needed.
+						</p>
+					{/if}
 					<div class="grid min-w-0 gap-6 @[48rem]:grid-cols-2 @[48rem]:gap-8">
 						<div class="min-w-0 space-y-6">
 							{#if hasDesktopBridge()}
@@ -875,17 +889,21 @@
 									bind:this={configSectionEl}
 									class="config-section min-w-0 space-y-3"
 									class:opacity-60={configBusy}
-									class:needs-attention={configNeedsAttention}
+									class:needs-attention={configHighlighted}
 								>
 									<header
 										class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
 									>
-										Config
+										{setupIncomplete ? 'Connect telemetry' : 'Config'}
 									</header>
 									<div class="min-w-0" inert={configBusy || undefined}>
 										<span class="mb-1 flex items-center gap-1.5 text-sm font-semibold">
-											Telemetry config file
-											<SettingMaturityBadge maturity="new" />
+											{setupIncomplete
+												? 'Wreckfest 2 telemetry config.json'
+												: 'Telemetry config file'}
+											{#if !setupIncomplete}
+												<SettingMaturityBadge maturity="new" />
+											{/if}
 											{#if configPathSelected}
 												<span
 													class="inline-flex size-5 items-center justify-center {configLooksReady
@@ -969,7 +987,10 @@
 								</section>
 							{/if}
 
-							<section class="min-w-0 space-y-3">
+							<section
+								class="min-w-0 space-y-3"
+								class:settings-secondary={settingsSecondary}
+							>
 								<header
 									class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
 								>
@@ -994,7 +1015,10 @@
 								/>
 							</section>
 
-							<section class="min-w-0 space-y-3">
+							<section
+								class="min-w-0 space-y-3"
+								class:settings-secondary={settingsSecondary}
+							>
 								<header
 									class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
 								>
@@ -1058,7 +1082,10 @@
 						</div>
 
 						<div class="min-w-0 space-y-6">
-							<section class="@container min-w-0 space-y-3">
+							<section
+								class="@container min-w-0 space-y-3"
+								class:settings-secondary={settingsSecondary}
+							>
 								<header
 									class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
 								>
@@ -1646,5 +1673,9 @@
 	}
 	:global(.config-action-attention) {
 		box-shadow: 0 0 0 2px var(--color-primary-500);
+	}
+	/* First-run: Config stays primary; other panels stay usable but quieter. */
+	.settings-secondary {
+		opacity: 0.55;
 	}
 </style>
