@@ -197,7 +197,6 @@ func (e *Engine) Settings() Settings {
 	return e.settings
 }
 
-// SetMessage stores a dashboard status line (bind failures, etc.).
 func (e *Engine) SetMessage(msg string) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -225,7 +224,6 @@ func (e *Engine) UpdateOrientation(slot int, x, y, z, w float64) {
 	e.detector.UpdateOrientation(e.clock(), slot, x, y, z, w)
 }
 
-// UpdateInfo takes e.mu before the detector lock — same order as Snapshot/SetMode/MarkPacket.
 func (e *Engine) UpdateInfo(slot int, name, carID, carName string, bot bool) {
 	e.mu.Lock()
 	defer e.mu.Unlock()

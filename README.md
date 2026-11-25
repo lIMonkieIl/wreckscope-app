@@ -64,22 +64,21 @@ wails3 task build VERSION=0.1.0
 
 Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`) and stamped into Windows `info.json` / NSIS `DisplayVersion` by `scripts/stamp-windows-version.ps1` (single source: `build/config.yml` `info.version` unless `-Version` is passed).
 
-## Release (draft)
+## Release
 
-GoReleaser does **not** invent a bare-exe package path — CI runs `scripts/package-windows.ps1` (Wails + NSIS), then attaches `setup.exe` + `SHA256SUMS` to a **draft** GitHub Release.
+Tagging `v*` runs `.github/workflows/release.yml`: `scripts/package-windows.ps1` builds the NSIS setup, then GoReleaser uploads `WreckScope-<ver>-windows-amd64-setup.exe` and `SHA256SUMS` to a **draft** GitHub Release. Edit the draft notes and publish when ready.
 
-1. Approve release notes (see Project store draft). Do **not** publish until notes are right.
-2. Push an annotated tag when ready for CI: `git tag -a v0.1.0 -m "v0.1.0"` then push that tag (after review).
-3. Workflow `.github/workflows/release.yml` builds on `windows-latest` and opens a **draft** release for the tag.
-4. Edit the draft body on GitHub → **Publish release** (that is the only public cut).
+```powershell
+git tag -a v0.1.0 -m "v0.1.0"
+git push origin v0.1.0
+```
 
-Re-run without retagging: Actions → Release → Run workflow → enter the existing tag (e.g. `v0.1.0`).
+Rebuild an existing tag: Actions → Release → Run workflow → tag `v0.1.0`.
 
-Local dry-run (artifacts only, no GitHub upload):
+Local package + GoReleaser dry-run (no upload):
 
 ```powershell
 .\scripts\package-windows.ps1 -Version 0.1.0
-# then, with goreleaser installed:
 goreleaser release --snapshot --clean --skip=publish
 ```
 

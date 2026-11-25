@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// Concurrent UpdateInfo + Snapshot used to AB-BA deadlock (detector then e.mu vs e.mu then detector).
 func TestUpdateInfoSnapshotLockOrder(t *testing.T) {
 	e := New()
 	done := make(chan struct{})

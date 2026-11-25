@@ -341,7 +341,6 @@ func (a *App) emitSettings(settings racefeed.Settings) {
 }
 
 // PhoneAccess: LAN phone URLs for the Device view QR. Full app, not view-only.
-// URLs are only returned when the LAN HTTP server is actually listening.
 func (a *App) PhoneAccess() map[string]interface{} {
 	addresses := []string{}
 	listening := a.lan && a.httpListening()

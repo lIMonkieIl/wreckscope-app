@@ -60,8 +60,6 @@ func applyInstalled(ctx context.Context, app *application.App, out Status) (Stat
 		out.Message = err.Error()
 		return out, err
 	}
-	// Leave the staged installer on disk; ClearStaged on the next app start removes it.
-	// Deleting here raced with NSIS opening the file after cmd start returns.
 
 	out.Message = "Opened installer " + rel.Version
 	go func() {

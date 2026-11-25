@@ -112,7 +112,7 @@ func LooksLikeConfig(path string) error {
 	return nil
 }
 
-// EnableAt sets udp[0] to enabled on 127.0.0.1:defaultPort (WreckScope's listener).
+// EnableAt sets udp[0] enabled on 127.0.0.1:defaultPort.
 func EnableAt(path string, defaultPort int) error {
 	original, err := os.ReadFile(path)
 	if err != nil {

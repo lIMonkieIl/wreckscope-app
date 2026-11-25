@@ -542,9 +542,7 @@
 					if (status.available || status.message) updateStatus = status;
 					if (status.current) appVersion = status.current;
 				})
-				.catch(() => {
-					/* bridge not ready yet */
-				});
+				.catch(() => {});
 		};
 		const stopDesktopBridge = onDesktopBridgeChange((desktop) => {
 			desktopBridge = desktop;
@@ -682,8 +680,6 @@
 	$effect(() => {
 		if (!desktopBridge || !streamReady) return;
 		const needsSettings = setupIncomplete || configNeedsAttention;
-		// Only probe when auto-opening Settings. Re-probing on every reactive flip
-		// wiped Browse/Find paths before Configure (ProbeTelemetry ignores unsaved picks).
 		if (needsSettings && !settingsOpen) {
 			settingsOpen = true;
 			queueMicrotask(() => {

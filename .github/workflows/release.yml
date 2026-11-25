@@ -1,5 +1,3 @@
-# Tag → draft GitHub Release with NSIS setup + SHA256SUMS.
-# Does not publish: Monkie edits notes on the draft, then clicks Publish.
 name: Release
 
 on:
@@ -9,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)build as a draft (e.g. v0.1.0)"
+        description: "Tag (e.g. v0.1.0)"
         required: true
         type: string
 
@@ -73,7 +71,6 @@ jobs:
           VER="${TAG#v}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
-          echo "Packaging version $VER (tag $TAG)"
 
       - name: Install UI deps
         run: pnpm --dir ui install --frozen-lockfile
@@ -91,7 +88,7 @@ jobs:
           if (-not (Test-Path dist\windows\SHA256SUMS)) { throw "missing SHA256SUMS" }
           Write-Host "Artifacts: $($setup.Name), SHA256SUMS"
 
-      - name: GoReleaser (draft release)
+      - name: GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
