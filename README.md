@@ -66,21 +66,14 @@ Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`) and 
 
 ## Release
 
-Tagging `v*` runs `.github/workflows/release.yml`: `scripts/package-windows.ps1` builds the NSIS setup, then GoReleaser uploads `WreckScope-<ver>-windows-amd64-setup.exe` and `SHA256SUMS` to a **draft** GitHub Release. Edit the draft notes and publish when ready.
-
 ```powershell
 git tag -a v0.1.0 -m "v0.1.0"
 git push origin v0.1.0
 ```
 
-Rebuild an existing tag: Actions → Release → Run workflow → tag `v0.1.0`.
+That runs `.github/workflows/release.yml`: `package-windows.ps1` builds the NSIS setup, GoReleaser attaches `WreckScope-<ver>-windows-amd64-setup.exe` and `SHA256SUMS` to a draft GitHub Release. Edit the draft notes, then publish.
 
-Local package + GoReleaser dry-run (no upload):
-
-```powershell
-.\scripts\package-windows.ps1 -Version 0.1.0
-goreleaser release --snapshot --clean --skip=publish
-```
+Rebuild a tag without retagging: Actions → Release → Run workflow.
 
 ## Data locations
 

@@ -1,12 +1,10 @@
 version: 2
 
 project_name: wreckscope
-
 dist: .goreleaser-out
 
 builds:
-  - id: skip-go
-    skip: true
+  - skip: true
 
 checksum:
   disable: true

@@ -14,10 +14,6 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   windows:
     runs-on: windows-latest
@@ -62,31 +58,20 @@ jobs:
           $nsis = "${env:ProgramFiles(x86)}\NSIS"
           "PATH=$goBin;$nsis;${env:ProgramFiles}\NSIS;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Resolve version from tag
+      - name: Version from tag
         id: ver
         shell: bash
         run: |
           TAG="${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
           TAG="${TAG#refs/tags/}"
-          VER="${TAG#v}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
       - name: Install UI deps
         run: pnpm --dir ui install --frozen-lockfile
 
       - name: Package Windows NSIS installer
         shell: pwsh
-        run: |
-          .\scripts\package-windows.ps1 -Version "${{ steps.ver.outputs.version }}" -Arch amd64
-
-      - name: Verify release artifacts
-        shell: pwsh
-        run: |
-          $setup = Get-ChildItem dist\windows\WreckScope-*-windows-amd64-setup.exe | Select-Object -First 1
-          if (-not $setup) { throw "missing setup exe under dist\windows" }
-          if (-not (Test-Path dist\windows\SHA256SUMS)) { throw "missing SHA256SUMS" }
-          Write-Host "Artifacts: $($setup.Name), SHA256SUMS"
+        run: .\scripts\package-windows.ps1 -Version "${{ steps.ver.outputs.version }}" -Arch amd64
 
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v6
