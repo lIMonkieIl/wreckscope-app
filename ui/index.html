@@ -12,8 +12,49 @@
             document.documentElement.classList.toggle('dark', dark);
         })();
     </script>
+    <style>
+        /* Covers the blank WebView until Svelte mounts. Not gated on update checks. */
+        #boot-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: grid;
+            place-items: center;
+            margin: 0;
+            background: #111820;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+        }
+        html[data-mode='light'] #boot-splash {
+            background: #f4f6f8;
+            color: #111820;
+        }
+        #boot-splash .mark {
+            width: 72px;
+            height: 72px;
+            display: block;
+        }
+        #boot-splash .word {
+            margin: 0.85rem 0 0;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        #boot-splash .wreck { color: #52C3FF; }
+        #boot-splash .scope { color: #007DAA; }
+        html[data-mode='light'] #boot-splash .wreck { color: #007DAA; }
+        html[data-mode='light'] #boot-splash .scope { color: #005f82; }
+    </style>
 </head>
 <body>
+<div id="boot-splash" role="status" aria-live="polite" aria-label="Loading WreckScope">
+    <div>
+        <img class="mark" src="/brand-mark.svg" width="72" height="72" alt="" />
+        <p class="word"><span class="wreck">Wreck</span><span class="scope">Scope</span></p>
+    </div>
+</div>
 <div id="app"></div>
 <script src="./src/main.ts" type="module"></script>
 </body>
