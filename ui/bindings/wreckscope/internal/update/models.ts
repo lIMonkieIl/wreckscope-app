@@ -10,4 +10,9 @@ export interface Status {
     "available": boolean;
     "mode": string;
     "message": string;
+
+    /**
+     * Notes is the GitHub release body for Latest when Available.
+     */
+    "notes"?: string;
 }

@@ -26,6 +26,8 @@ type Status struct {
 	Available bool   `json:"available"`
 	Mode      string `json:"mode"`
 	Message   string `json:"message"`
+	// Notes is the GitHub release body for Latest when Available.
+	Notes string `json:"notes,omitempty"`
 }
 
 // Configure wires app.Updater for installed builds. WindowNone — UI lives in Settings.
@@ -67,6 +69,7 @@ func Check(ctx context.Context, app *application.App) (Status, error) {
 	}
 	out.Available = true
 	out.Latest = rel.Version
+	out.Notes = rel.Notes
 	out.Message = "Installer " + rel.Version + " available"
 	return out, nil
 }

@@ -26,10 +26,14 @@
 		lastUpdateStatus,
 		onUpdateChecking,
 		onUpdateStatus,
+		releaseNotes,
 		type UpdateStatus,
 	} from './updates.ts';
 	import UpdateAvailableBanner from './UpdateAvailableBanner.svelte';
+	import UpdateDownloadSheet from './UpdateDownloadSheet.svelte';
+	import WhatsNewSheet from './WhatsNewSheet.svelte';
 	import { dismissUpdateVersion, dismissedUpdateVersion } from './updateBannerDismiss.ts';
+	import { markWhatsNewSeen, seenWhatsNewVersion } from './whatsNewDismiss.ts';
 	import { Dialog, Popover, Portal, QrCode } from '@skeletonlabs/skeleton-svelte';
 	import ThemePicker from '#lib/features/appearance/ThemePicker.svelte';
 	import { setCommittedDocumentTheme } from '#lib/features/appearance/themeHover.ts';
@@ -209,6 +213,19 @@
 	let updateApplyError = $state('');
 	let updateBannerDismissed = $state(dismissedUpdateVersion());
 	let updateBannerSessionHide = $state(false);
+	let downloadSheetOpen = $state(false);
+	let downloadSheetNotes = $state('');
+	let downloadSheetLatest = $state('');
+	let whatsNewOpen = $state(false);
+	/** True until What’s new is dismissed or skipped — keeps first-run Settings behind it. */
+	let whatsNewPending = $state(hasDesktopBridge());
+	/** Ensures maybeShowWhatsNew only schedules once (pending alone must not block scheduling). */
+	let whatsNewScheduled = $state(false);
+	let whatsNewVersion = $state('');
+	let whatsNewNotes = $state('');
+	let whatsNewSeen = $state(seenWhatsNewVersion());
+	/** Settings was open when a higher sheet took over; reopen after that sheet closes if needed. */
+	let reopenSettingsAfterSheet = $state(false);
 	/** Optimistic live/demo until the stream confirms. */
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
 	let liveSettings = $derived(withNormalizedSettings(snapshot.settings));
@@ -543,13 +560,31 @@
 		const stopUpdateChecking = onUpdateChecking((checking) => {
 			updateChecking = checking;
 		});
-		void getAppVersion().then((v) => {
-			if (v) appVersion = v;
-		});
-		const loadDesktopExtras = () => {
-			void getAppVersion().then((v) => {
-				if (v) appVersion = v;
+		void getAppVersion()
+			.then((v) => {
+				if (v) {
+					appVersion = v;
+					void maybeShowWhatsNew(v);
+				} else {
+					whatsNewPending = false;
+				}
+			})
+			.catch(() => {
+				whatsNewPending = false;
 			});
+		const loadDesktopExtras = () => {
+			void getAppVersion()
+				.then((v) => {
+					if (v) {
+						appVersion = v;
+						void maybeShowWhatsNew(v);
+					} else {
+						whatsNewPending = false;
+					}
+				})
+				.catch(() => {
+					whatsNewPending = false;
+				});
 			void lastUpdateStatus()
 				.then((status) => {
 					if (status.available || status.message) updateStatus = status;
@@ -559,7 +594,12 @@
 		};
 		const stopDesktopBridge = onDesktopBridgeChange((desktop) => {
 			desktopBridge = desktop;
-			if (desktop) loadDesktopExtras();
+			if (desktop) {
+				if (!whatsNewScheduled && !whatsNewOpen) whatsNewPending = true;
+				loadDesktopExtras();
+			} else {
+				whatsNewPending = false;
+			}
 		});
 		return () => {
 			compact.removeEventListener('change', syncLayout);
@@ -693,8 +733,11 @@
 
 	$effect(() => {
 		if (!desktopBridge || !streamReady) return;
-		const needsSettings = setupIncomplete || configNeedsAttention;
+		// What’s new first, then first-run / config Settings.
+		if (whatsNewOpen || whatsNewPending || downloadSheetOpen) return;
+		const needsSettings = setupIncomplete || configNeedsAttention || reopenSettingsAfterSheet;
 		if (needsSettings && !settingsOpen) {
+			reopenSettingsAfterSheet = false;
 			settingsOpen = true;
 			queueMicrotask(() => {
 				configSectionEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
@@ -883,6 +926,7 @@
 					available: false,
 					mode: 'installed',
 					message: '',
+					notes: '',
 				}),
 				message,
 			};
@@ -910,12 +954,80 @@
 					available: true,
 					mode: 'installed',
 					message: '',
+					notes: '',
 				}),
 				message,
 			};
 		} finally {
 			updateBusy = false;
 		}
+	}
+
+	function parkSettingsForSheet() {
+		if (!settingsOpen) return;
+		reopenSettingsAfterSheet = setupIncomplete || configNeedsAttention || firstRunSetup;
+		// Close without markSetupComplete (editSettings(false) would finish first-run).
+		settingsOpen = false;
+	}
+
+	async function openDownloadSheet() {
+		parkSettingsForSheet();
+		if (!desktopBridge || !updateStatus?.available) return;
+		downloadSheetLatest = updateStatus.latest || '';
+		downloadSheetNotes = updateStatus.notes || '';
+		downloadSheetOpen = true;
+		if (!downloadSheetNotes && downloadSheetLatest) {
+			try {
+				downloadSheetNotes = await releaseNotes(downloadSheetLatest);
+			} catch {
+				/* keep empty — sheet still usable */
+			}
+		}
+	}
+
+	async function confirmDownloadSheet() {
+		await runUpdateApply();
+		if (!updateApplyError) downloadSheetOpen = false;
+	}
+
+	function dismissWhatsNew() {
+		whatsNewOpen = false;
+		whatsNewPending = false;
+		if (whatsNewVersion) {
+			markWhatsNewSeen(whatsNewVersion);
+			whatsNewSeen = whatsNewVersion;
+		}
+	}
+
+	async function maybeShowWhatsNew(version: string) {
+		const ver = version.trim();
+		if (whatsNewOpen || whatsNewScheduled) return;
+		if (!ver) {
+			whatsNewPending = false;
+			return;
+		}
+		whatsNewScheduled = true;
+		whatsNewPending = true;
+		if (settingsOpen) {
+			reopenSettingsAfterSheet = setupIncomplete || configNeedsAttention || firstRunSetup;
+			settingsOpen = false;
+		}
+		const reveal = async () => {
+			if (!desktopBridge || whatsNewSeen === ver) {
+				whatsNewPending = false;
+				return;
+			}
+			whatsNewVersion = ver;
+			whatsNewNotes = '';
+			try {
+				whatsNewNotes = await releaseNotes(ver);
+			} catch {
+				/* still show light sheet */
+			}
+			whatsNewOpen = true;
+		};
+		// Let the boot splash finish before What’s new; Settings waits until dismiss.
+		window.setTimeout(() => void reveal(), 500);
 	}
 
 	let settingsVersionLabel = $derived(`ver: ${appVersion || '…'}`);
@@ -982,10 +1094,23 @@
 		<UpdateAvailableBanner
 			latest={updateBannerLatest}
 			busy={updateBusy && settingsUpdateReady}
-			onDownload={() => void runUpdateApply()}
+			onDownload={() => void openDownloadSheet()}
 			onLater={laterUpdateBanner}
 		/>
 	{/if}
+	<UpdateDownloadSheet
+		bind:open={downloadSheetOpen}
+		latest={downloadSheetLatest}
+		notes={downloadSheetNotes}
+		busy={updateBusy && settingsUpdateReady}
+		onConfirm={() => void confirmDownloadSheet()}
+	/>
+	<WhatsNewSheet
+		bind:open={whatsNewOpen}
+		version={whatsNewVersion}
+		notes={whatsNewNotes}
+		onDismiss={dismissWhatsNew}
+	/>
 	{#snippet chromeActions()}
 		{#if desktopBridge}
 			<Dialog
@@ -1007,7 +1132,7 @@
 									<QrCode.Pattern fill="#090909" />
 								</QrCode.Frame>
 								<QrCode.Overlay
-									class="grid size-8 place-items-center rounded-full border-2 border-white bg-surface-950"
+									class="grid size-8 place-items-center rounded-full border-2 border-surface-50 bg-surface-950"
 								>
 									<BrandMark size={22} />
 								</QrCode.Overlay>
@@ -1038,7 +1163,7 @@
 							latest={updateStatus?.latest || ''}
 							errorTitle={updateApplyError}
 							onCheck={() => void runUpdateCheck()}
-							onDownload={() => void runUpdateApply()}
+							onDownload={() => void openDownloadSheet()}
 						/>
 					{:else}
 						<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>

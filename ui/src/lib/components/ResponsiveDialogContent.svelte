@@ -6,9 +6,19 @@
 	let {
 		title,
 		width = 'sm:max-w-md',
+		/** Sit above the default Settings/device layer (z-100). */
+		elevated = false,
 		headerEnd,
 		children,
-	}: { title: string; width?: string; headerEnd?: Snippet; children: Snippet } = $props();
+	}: {
+		title: string;
+		width?: string;
+		elevated?: boolean;
+		headerEnd?: Snippet;
+		children: Snippet;
+	} = $props();
+
+	let layer = $derived(elevated ? 'z-[130]' : 'z-[100]');
 
 	let offset = $state(0);
 	let drag: { id: number; y: number } | undefined;
@@ -41,13 +51,13 @@
 </script>
 
 <Portal>
-	<Dialog.Backdrop class="fixed inset-0 z-[100] bg-black/60" />
+	<Dialog.Backdrop class="fixed inset-0 {layer} bg-surface-950/60" />
 	<Dialog.Positioner
-		class="fixed inset-0 z-[100] grid items-end justify-items-center sm:place-items-center sm:p-4"
+		class="fixed inset-0 {layer} grid items-end justify-items-center sm:place-items-center sm:p-4"
 	>
 		<Dialog.Content
 			style={`--sheet-offset: ${offset}px`}
-			class="card responsive-dialog flex max-h-[85dvh] w-full max-w-[100%] flex-col overflow-hidden bg-surface-50-950 shadow-xl sm:max-h-[90dvh] {width}"
+			class="responsive-dialog flex max-h-[85dvh] w-full max-w-[100%] flex-col overflow-hidden rounded-t-[var(--radius-container)] border border-surface-300-700 bg-surface-50-950 shadow-xl sm:max-h-[90dvh] sm:rounded-[var(--radius-container)] {width}"
 		>
 			<Dialog.Context>
 				{#snippet children(dialog)}
@@ -68,7 +78,7 @@
 				{/snippet}
 			</Dialog.Context>
 			<header
-				class="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-surface-300-700 bg-surface-50-950 px-5 pt-[max(0.25rem,env(safe-area-inset-top))] pb-3 max-sm:-mt-2 sm:pt-4"
+				class="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-surface-300-700 bg-surface-50-950 px-5 pt-[max(0.25rem,env(safe-area-inset-top))] pb-3 sm:pt-4"
 			>
 				<Dialog.Title class="h4 min-w-0 truncate">{title}</Dialog.Title>
 				<div class="flex min-w-0 shrink-0 items-center gap-2">

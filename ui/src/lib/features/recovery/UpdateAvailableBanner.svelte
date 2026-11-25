@@ -23,20 +23,15 @@
 	<div class="update-banner-actions">
 		<button
 			type="button"
-			class="btn preset-filled-success-500 btn-sm gap-0 overflow-hidden p-0"
+			class="btn preset-filled-success-500 gap-0 overflow-hidden p-0"
 			disabled={busy}
 			aria-label={`Download ${versionLabel}`}
 			title={`Download ${versionLabel}`}
 			onclick={() => onDownload?.()}
 		>
-			<span class="inline-flex items-center justify-center border-r border-white/25 px-1.5 py-0.5">
+			<span class="inline-flex items-center justify-center border-r border-white/25 px-2.5 py-2">
 				{#if busy}
-					<svg
-						class="size-4 animate-spin"
-						viewBox="0 0 24 24"
-						fill="none"
-						aria-hidden="true"
-					>
+					<svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 						<circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" />
 						<path
 							class="opacity-90"
@@ -50,9 +45,9 @@
 					<ControlIcon name="download" />
 				{/if}
 			</span>
-			<span class="px-1.5 font-mono text-[0.7rem] leading-none">{versionLabel}</span>
+			<span class="px-3 font-mono text-sm leading-none">{versionLabel}</span>
 		</button>
-		<button type="button" class="btn preset-ghost btn-sm" disabled={busy} onclick={() => onLater?.()}>
+		<button type="button" class="btn preset-ghost" disabled={busy} onclick={() => onLater?.()}>
 			Later
 		</button>
 	</div>
@@ -68,8 +63,8 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.65rem 0.85rem;
-		max-width: min(24rem, calc(100vw - 1.5rem));
-		padding: 0.7rem 0.85rem;
+		max-width: min(26rem, calc(100vw - 1.5rem));
+		padding: 0.85rem 1rem;
 		border-radius: var(--radius-container, 0.75rem);
 		border: 1px solid light-dark(var(--color-surface-300, #ccc), var(--color-surface-700, #333));
 		background: light-dark(var(--color-surface-50, #fff), var(--color-surface-900, #161616));
@@ -77,14 +72,14 @@
 	}
 	.update-banner-copy {
 		margin: 0;
-		font-size: 0.85rem;
+		font-size: 0.95rem;
 		color: light-dark(var(--color-surface-800, #222), var(--color-surface-200, #ddd));
 	}
 	.update-banner-actions {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.35rem;
+		gap: 0.5rem;
 		margin-left: auto;
 	}
 </style>

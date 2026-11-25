@@ -479,6 +479,10 @@ label:has(input:focus-visible) {
 	.responsive-dialog {
 		translate: 0 var(--sheet-offset, 0px);
 		padding-top: 0;
+		/* Phone sheets sit flush to the bottom edge; keep only the side/top stroke. */
+		border-bottom-width: 0;
+		border-bottom-left-radius: 0;
+		border-bottom-right-radius: 0;
 	}
 	.sheet-grab {
 		display: grid;
@@ -487,6 +491,7 @@ label:has(input:focus-visible) {
 		place-items: center;
 		touch-action: none;
 		cursor: grab;
+		background: light-dark(var(--color-surface-50), var(--color-surface-950));
 	}
 	.sheet-grab span {
 		width: 2.25rem;

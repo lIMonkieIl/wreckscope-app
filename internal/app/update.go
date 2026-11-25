@@ -83,6 +83,13 @@ func (a *App) LastUpdateStatus() update.Status {
 	return a.loadUpdateStatus()
 }
 
+// ReleaseNotes returns the GitHub release body for a version (current or latest).
+func (a *App) ReleaseNotes(version string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	return update.NotesFor(ctx, version)
+}
+
 func (a *App) quietUpdateCheck() {
 	if a.wails == nil {
 		return

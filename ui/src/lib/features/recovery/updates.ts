@@ -6,10 +6,11 @@ export type UpdateStatus = {
 	available: boolean;
 	mode: 'installed' | string;
 	message: string;
+	notes: string;
 };
 
 function emptyStatus(): UpdateStatus {
-	return { current: '', latest: '', available: false, mode: '', message: '' };
+	return { current: '', latest: '', available: false, mode: '', message: '', notes: '' };
 }
 
 function asStatus(value: Record<string, unknown> | null | undefined): UpdateStatus {
@@ -20,6 +21,7 @@ function asStatus(value: Record<string, unknown> | null | undefined): UpdateStat
 		available: !!value.available,
 		mode: typeof value.mode === 'string' ? value.mode : '',
 		message: typeof value.message === 'string' ? value.message : '',
+		notes: typeof value.notes === 'string' ? value.notes : '',
 	};
 }
 
@@ -64,6 +66,13 @@ export async function lastUpdateStatus(): Promise<UpdateStatus> {
 export async function checkForUpdates(): Promise<UpdateStatus> {
 	const app = await loadApp();
 	return asStatus((await app.CheckForUpdates()) as unknown as Record<string, unknown>);
+}
+
+/** GitHub release body for a version tag (current or latest). */
+export async function releaseNotes(version: string): Promise<string> {
+	const app = await loadApp();
+	const notes = await app.ReleaseNotes(version);
+	return typeof notes === 'string' ? notes : '';
 }
 
 /** Background quiet-check results (up-to-date or available). */

@@ -100,6 +100,13 @@ export function ProbeTelemetryAt(path: string): $CancellablePromise<{ [_ in stri
 }
 
 /**
+ * ReleaseNotes returns the GitHub release body for a version (current or latest).
+ */
+export function ReleaseNotes(version: string): $CancellablePromise<string> {
+    return $Call.ByID(3466363980, version);
+}
+
+/**
  * ResetTelemetrySetup clears the saved telemetry path. Leaves setupCompleted alone.
  */
 export function ResetTelemetrySetup(): $CancellablePromise<{ [_ in string]?: any } | null> {
