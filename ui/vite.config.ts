@@ -17,6 +17,8 @@ export default defineConfig({
   },
   clearScreen: false,
   server: {
+    // IPv4 loopback: Wails AssetServer dials tcp4 127.0.0.1 (Windows).
+    host: '127.0.0.1',
     strictPort: true,
     // Wails webview loads via wails.localhost during `wails3 task dev`
     allowedHosts: ['.localhost', 'wails.localhost'],

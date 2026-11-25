@@ -15,14 +15,28 @@ Built with [Wails v3](https://wails.io) (Go + Svelte). Windows installer (defaul
 
 ## Develop
 
+Preferred (hot reload — Vite + app, waits until Vite accepts connections):
+
 ```powershell
 pnpm --dir ui install
-wails3 task build DEV=true
-wails3 task run
-# or: wails3 task dev
+wails3 task dev
 ```
 
+Alternate (no watcher): start Vite in one terminal, then build/run in another:
+
+```powershell
+pnpm --dir ui dev -- --host 127.0.0.1 --port 9245 --strictPort
+# other terminal:
+$env:FRONTEND_DEVSERVER_URL = "http://127.0.0.1:9245"
+wails3 task build DEV=true
+wails3 task run
+```
+
+`ui/bindings/` are the generated Wails v3 TypeScript bindings — keep and regenerate with `wails3 generate bindings` after Go API changes (old `wailsjs` is gone).
+
 Demo mode is available in non-production (debug) builds, or with `-tags dev`.
+
+`uname` / `tail` messages from Task on Windows are harmless noise.
 
 ## Build
 

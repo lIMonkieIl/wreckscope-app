@@ -203,32 +203,40 @@ tasks:
     cmds:
       - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico -iconcomposerinput appicon.icon -macassetdir darwin
 
-  dev:ui:
-    summary: Runs the ui in development mode
+  # Stock Wails name — config.yml / applyFrontendReadiness match this string.
+  # Our frontend lives under ui/; keep both task names in sync.
+  dev:frontend:
+    summary: Runs the UI Vite dev server (stock Wails task name)
     deps:
       - task: install:ui:deps
     cmds:
       - task: ui:dev:{{.PACKAGE_MANAGER}}
 
+  dev:ui:
+    summary: Alias for common:dev:frontend (frontend dir is ui/)
+    cmds:
+      - task: dev:frontend
+
   ui:dev:npm:
     dir: ui
     cmds:
-      - npm run dev -- --port {{.VITE_PORT}} --strictPort
+      # Bind IPv4 loopback — AssetServer proxies with tcp4 on Windows.
+      - npm run dev -- --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   ui:dev:yarn:
     dir: ui
     cmds:
-      - yarn dev --port {{.VITE_PORT}} --strictPort
+      - yarn dev --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   ui:dev:pnpm:
     dir: ui
     cmds:
-      - pnpm dev --port {{.VITE_PORT}} --strictPort
+      - pnpm dev -- --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   ui:dev:bun:
     dir: ui
     cmds:
-      - bun run dev --port {{.VITE_PORT}} --strictPort
+      - bun run dev --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   update:build-assets:
     summary: Updates the build assets

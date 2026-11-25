@@ -37,7 +37,12 @@ dev_mode:
   executes:
     - cmd: wails3 build DEV=true
       type: blocking
-    - cmd: wails3 task common:dev:ui
+    # Must be exactly `common:dev:frontend` (not `…:ui`) so wails3 auto-attaches a
+    # TCP readiness gate from FRONTEND_DEVSERVER_URL before starting the app.
+    # Without that gate the WebView races Vite and Edge shows 502 on Windows.
+    # Task is aliased to ui/ (see build/Taskfile.yml). Vite binds 127.0.0.1 so the
+    # AssetServer's tcp4 proxy matches.
+    - cmd: wails3 task common:dev:frontend
       type: background
     - cmd: wails3 task run
       type: primary
