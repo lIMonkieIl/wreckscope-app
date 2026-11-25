@@ -942,28 +942,26 @@
 					width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
 				>
 					{#snippet headerEnd()}
-						<div class="flex max-w-[14rem] flex-col items-end gap-1 sm:max-w-xs">
+						<div class="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1">
 							<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
 								{settingsVersionLabel}
 							</p>
 							{#if settingsUpdateReady}
-								<div class="flex flex-wrap items-center justify-end gap-1.5">
-									<span class="text-xs text-surface-700-300" role="status">
-										Update {updateStatus?.latest || 'ready'}
-									</span>
-									<button
-										type="button"
-										class="btn preset-filled-primary-500 btn-sm"
-										disabled={updateBusy}
-										onclick={() => void runUpdateApply()}
-									>
-										{updateBusy
-											? 'Working…'
-											: updateStatus?.mode === 'portable'
-												? 'Install'
-												: 'Download installer'}
-									</button>
-								</div>
+								<span class="text-xs text-surface-700-300" role="status">
+									Update {updateStatus?.latest || 'ready'}
+								</span>
+								<button
+									type="button"
+									class="btn preset-filled-primary-500 btn-sm"
+									disabled={updateBusy}
+									onclick={() => void runUpdateApply()}
+								>
+									{updateBusy
+										? 'Working…'
+										: updateStatus?.mode === 'portable'
+											? 'Install'
+											: 'Download installer'}
+								</button>
 							{:else if settingsUpToDate}
 								<p class="truncate text-xs text-surface-700-300" role="status">Up to date</p>
 							{/if}
