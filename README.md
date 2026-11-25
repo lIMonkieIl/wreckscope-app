@@ -2,7 +2,7 @@
 
 Live recovery dashboard for Wreckfest 2. Watches the race feed, flags stuck cars, and shows the grid on a map — on PC and on a phone over LAN.
 
-Built with [Wails v3](https://wails.io) (Go + Svelte). Windows installer (default) or portable zip.
+Built with [Wails v3](https://wails.io) (Go + Svelte). Windows NSIS installer; settings and caches under `%AppData%\WreckScope\`.
 
 ## Requirements
 
@@ -43,7 +43,7 @@ Demo mode is available in non-production (debug) builds, or with `-tags dev`.
 
 ## Build
 
-Installer + portable zip:
+NSIS installer:
 
 ```powershell
 .\scripts\package-windows.ps1
@@ -51,12 +51,10 @@ Installer + portable zip:
 
 Outputs under `dist\windows\`:
 
-- `WreckScope-<ver>-windows-amd64-setup.exe` — NSIS installer (installed upgrades)
-- `WreckScope-windows-amd64.exe` — bare exe for in-app portable updates
-- `WreckScope-<ver>-windows-amd64-portable.zip` — exe + `settings.json` (`portable: true`)
+- `WreckScope-<ver>-windows-amd64-setup.exe` — NSIS installer
 - `SHA256SUMS` — checksums for the GitHub updater
 
-Publish all four on a GitHub Release. Portable installs swap the bare exe in place; installed builds download/open the setup package.
+Publish both on a GitHub Release. In-app updates download the setup package to `%AppData%\WreckScope\updates\`, open it, then quit.
 
 Binary-only (no installer):
 
@@ -66,10 +64,15 @@ wails3 task build VERSION=0.1.0
 
 Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`).
 
-## Settings
+## Data locations
 
-- **Installed** (no portable settings beside the exe): `%AppData%\WreckScope\settings.json`
-- **Portable** (zip ships `settings.json` with `"portable": true`): settings stay next to the exe
+Install dir (Program Files) holds binaries only.
+
+Everything else under `%AppData%\WreckScope\`:
+
+- `settings.json` — app settings
+- `webview\` — WebView2 profile
+- `updates\` — downloaded setup packages for in-app update
 
 Game telemetry `config.json` stays under `My Games\Wreckfest 2\...\savegame\telemetry\`. WreckScope can enable UDP on `127.0.0.1:23123` and keeps a sibling backup before writing.
 

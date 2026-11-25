@@ -9,16 +9,11 @@ import (
 	"wreckscope/internal/racefeed"
 )
 
-func TestPathInstalledUsesAppData(t *testing.T) {
+func TestPathUsesAppData(t *testing.T) {
 	PathOverride = ""
-	exeDir := t.TempDir()
 	configDir := t.TempDir()
-	lookupExe = func() (string, error) {
-		return filepath.Join(exeDir, "WreckScope.exe"), nil
-	}
 	lookupUserConfig = func() (string, error) { return configDir, nil }
 	t.Cleanup(func() {
-		lookupExe = os.Executable
 		lookupUserConfig = os.UserConfigDir
 	})
 
@@ -30,22 +25,13 @@ func TestPathInstalledUsesAppData(t *testing.T) {
 	if path != want {
 		t.Fatalf("path=%q want %q", path, want)
 	}
-	if PortableFile(filepath.Join(exeDir, fileName)) {
-		t.Fatal("expected non-portable")
-	}
 }
 
-func TestWebviewDataDirInstalledStable(t *testing.T) {
+func TestWebviewDataDirUnderAppData(t *testing.T) {
 	PathOverride = ""
-	exeDir := t.TempDir()
 	configDir := t.TempDir()
-	lookupExe = func() (string, error) {
-		// Bare updater asset name must not become the WebView profile folder.
-		return filepath.Join(exeDir, "WreckScope-windows-amd64.exe"), nil
-	}
 	lookupUserConfig = func() (string, error) { return configDir, nil }
 	t.Cleanup(func() {
-		lookupExe = os.Executable
 		lookupUserConfig = os.UserConfigDir
 	})
 
@@ -59,185 +45,62 @@ func TestWebviewDataDirInstalledStable(t *testing.T) {
 	}
 }
 
-func TestWebviewDataDirPortableBesideExe(t *testing.T) {
+func TestUpdatesDirUnderAppData(t *testing.T) {
 	PathOverride = ""
-	exeDir := t.TempDir()
-	beside := filepath.Join(exeDir, fileName)
-	if err := os.WriteFile(beside, []byte(`{"portable":true}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	lookupExe = func() (string, error) {
-		return filepath.Join(exeDir, "WreckScope.exe"), nil
-	}
-	lookupUserConfig = func() (string, error) {
-		t.Fatal("UserConfigDir should not be used in portable mode")
-		return "", nil
-	}
+	configDir := t.TempDir()
+	lookupUserConfig = func() (string, error) { return configDir, nil }
 	t.Cleanup(func() {
-		lookupExe = os.Executable
 		lookupUserConfig = os.UserConfigDir
 	})
 
-	got, err := WebviewDataDir()
+	got, err := UpdatesDir()
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := filepath.Join(exeDir, "webview-data")
+	want := filepath.Join(configDir, appDataFolder, "updates")
 	if got != want {
-		t.Fatalf("webview=%q want %q", got, want)
+		t.Fatalf("updates=%q want %q", got, want)
 	}
 }
 
-func TestPathPortableBesideExe(t *testing.T) {
-	PathOverride = ""
-	exeDir := t.TempDir()
-	beside := filepath.Join(exeDir, fileName)
-	if err := os.WriteFile(beside, []byte(`{"portable":true,"theme":"wreckscope"}`), 0o644); err != nil {
+func TestLoadSaveRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, fileName)
+	in := racefeed.Settings{Theme: "wreckscope", Mode: "system", SpeedUnit: "km/h"}
+	if err := Save(path, in); err != nil {
 		t.Fatal(err)
 	}
-	lookupExe = func() (string, error) {
-		return filepath.Join(exeDir, "WreckScope.exe"), nil
-	}
-	lookupUserConfig = func() (string, error) {
-		t.Fatal("UserConfigDir should not be used in portable mode")
-		return "", nil
-	}
-	t.Cleanup(func() {
-		lookupExe = os.Executable
-		lookupUserConfig = os.UserConfigDir
-	})
-
-	path, err := Path()
+	got, err := Load(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if path != beside {
-		t.Fatalf("path=%q want %q", path, beside)
-	}
-	if !PortableFile(beside) {
-		t.Fatal("expected portable")
-	}
-}
-
-func TestPathPortableWithUTF8BOM(t *testing.T) {
-	PathOverride = ""
-	exeDir := t.TempDir()
-	beside := filepath.Join(exeDir, fileName)
-	bom := []byte{0xEF, 0xBB, 0xBF}
-	body := append(bom, []byte(`{"portable":true,"theme":"wreckscope","mode":"system"}`)...)
-	if err := os.WriteFile(beside, body, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	lookupExe = func() (string, error) {
-		return filepath.Join(exeDir, "WreckScope.exe"), nil
-	}
-	lookupUserConfig = func() (string, error) {
-		t.Fatal("UserConfigDir should not be used in portable mode")
-		return "", nil
-	}
-	t.Cleanup(func() {
-		lookupExe = os.Executable
-		lookupUserConfig = os.UserConfigDir
-	})
-
-	if !PortableFile(beside) {
-		t.Fatal("BOM should not block portable detect")
-	}
-	path, err := Path()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if path != beside {
-		t.Fatalf("path=%q want %q", path, beside)
-	}
-	got, err := Load(beside)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.Theme != "wreckscope" || got.Mode != "system" || !got.Portable {
+	if got.Theme != "wreckscope" || got.Mode != "system" {
 		t.Fatalf("got %+v", got)
 	}
 }
 
-func TestPathIgnoresBesideExeWithoutFlag(t *testing.T) {
-	PathOverride = ""
-	exeDir := t.TempDir()
-	configDir := t.TempDir()
-	beside := filepath.Join(exeDir, fileName)
-	if err := os.WriteFile(beside, []byte(`{"theme":"pine"}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	lookupExe = func() (string, error) {
-		return filepath.Join(exeDir, "WreckScope.exe"), nil
-	}
-	lookupUserConfig = func() (string, error) { return configDir, nil }
-	t.Cleanup(func() {
-		lookupExe = os.Executable
-		lookupUserConfig = os.UserConfigDir
-	})
-
-	path, err := Path()
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := filepath.Join(configDir, appDataFolder, fileName)
-	if path != want {
-		t.Fatalf("path=%q want %q", path, want)
-	}
-}
-
-func TestSaveKeepsPortableFlag(t *testing.T) {
+func TestLoadStripsUTF8BOM(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, fileName)
-	seed := racefeed.Settings{Portable: true, Theme: "wreckscope", Mode: "dark"}
-	if err := Save(path, seed); err != nil {
-		t.Fatal(err)
-	}
-	next := racefeed.Settings{Theme: "pine", Mode: "light", SpeedUnit: "mph"}
-	if err := Save(path, next); err != nil {
+	body := append([]byte{0xEF, 0xBB, 0xBF}, []byte(`{"theme":"wreckscope","mode":"system"}`)...)
+	if err := os.WriteFile(path, body, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	got, err := Load(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !got.Portable {
-		t.Fatal("portable flag dropped")
-	}
-	if got.Theme != "pine" {
-		t.Fatalf("theme=%q", got.Theme)
+	if got.Theme != "wreckscope" || got.Mode != "system" {
+		t.Fatalf("got %+v", got)
 	}
 }
 
-func TestSaveLoadRoundTrip(t *testing.T) {
+func TestSaveJSONShape(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "settings.json")
-	PathOverride = path
-	t.Cleanup(func() { PathOverride = "" })
-
-	want := racefeed.Settings{
-		DrawTrackOutline: true,
-		SpeedUnit:        "mph",
-		MuteAlertSound:   true,
-		Theme:            "pine",
-		Mode:             "light",
-	}
-	want.CautionSeconds = 2
-	want.AlertSeconds = 4
-	want.SpeedThreshold = 5
-	want.HideBots = true
-
-	if err := Save(path, want); err != nil {
+	path := filepath.Join(dir, fileName)
+	if err := Save(path, racefeed.Settings{Theme: "pine", Mode: "light"}); err != nil {
 		t.Fatal(err)
 	}
-	got, err := Load(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got != want {
-		t.Fatalf("got %+v want %+v", got, want)
-	}
-
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -247,6 +110,9 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	if check["theme"] != "pine" || check["mode"] != "light" {
-		t.Fatalf("json appearance: %v", check)
+		t.Fatalf("json=%v", check)
+	}
+	if _, ok := check["portable"]; ok {
+		t.Fatal("portable key must not appear")
 	}
 }

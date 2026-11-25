@@ -21,7 +21,7 @@ func main() {
 	if dataDir, err := settings.WebviewDataDir(); err != nil {
 		log.Printf("WebView data dir: %v", err)
 	} else {
-		// Stable profile — bare WreckScope-windows-amd64.exe must not use %AppData%\<exe-name>.
+		// Always %AppData%\WreckScope\webview — never beside the exe / named after the binary.
 		windowsOpts.WebviewUserDataPath = dataDir
 	}
 

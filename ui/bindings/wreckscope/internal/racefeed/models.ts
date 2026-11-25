@@ -253,8 +253,7 @@ export interface RaceDetails {
 }
 
 /**
- * Settings: UI + detection (AppData when installed; beside exe when portable).
- * Portable latches settings.json next to the exe for zip builds.
+ * Settings: UI + detection under %AppData%\WreckScope\settings.json.
  * TelemetryConfigPath is the game config.json path (game file stays separate).
  * SetupCompleted is first-run only, not "telemetry already enabled".
  */
@@ -279,7 +278,6 @@ export interface Settings {
     "view": string;
     "telemetryConfigPath"?: string;
     "setupCompleted": boolean;
-    "portable"?: boolean;
 }
 
 export interface Snapshot {

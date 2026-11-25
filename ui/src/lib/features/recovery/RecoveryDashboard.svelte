@@ -198,6 +198,7 @@
 	let appVersion = $state('');
 	let updateStatus = $state<UpdateStatus | null>(null);
 	let updateBusy = $state(false);
+	let updateApplyError = $state('');
 	/** Optimistic live/demo until the stream confirms. */
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
 	let liveSettings = $derived(withNormalizedSettings(snapshot.settings));
@@ -523,6 +524,7 @@
 		});
 		const stopUpdateNotice = onUpdateStatus((status) => {
 			updateStatus = status;
+			updateApplyError = '';
 			if (status.current) appVersion = status.current;
 		});
 		void getAppVersion().then((v) => {
@@ -848,18 +850,24 @@
 	async function runUpdateApply() {
 		if (!desktopBridge || updateBusy || !updateStatus?.available) return;
 		updateBusy = true;
+		updateApplyError = '';
 		try {
 			updateStatus = await applyUpdate();
+			if (updateStatus?.message && !updateStatus.available) {
+				updateApplyError = updateStatus.message;
+			}
 		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			updateApplyError = message;
 			updateStatus = {
 				...(updateStatus ?? {
 					current: appVersion,
 					latest: '',
-					available: false,
-					mode: '',
+					available: true,
+					mode: 'installed',
 					message: '',
 				}),
-				message: error instanceof Error ? error.message : String(error),
+				message,
 			};
 		} finally {
 			updateBusy = false;
@@ -869,7 +877,11 @@
 	let settingsVersionLabel = $derived(`ver: ${appVersion || '…'}`);
 	let settingsUpdateReady = $derived(!!desktopBridge && !!updateStatus?.available);
 	let settingsUpToDate = $derived(
-		!!desktopBridge && !!updateStatus && !updateStatus.available && !!updateStatus.message,
+		!!desktopBridge &&
+			!!updateStatus &&
+			!updateStatus.available &&
+			!!updateStatus.message &&
+			!updateApplyError,
 	);
 	async function showPhone(open: boolean) {
 		phoneOpen = open;
@@ -946,7 +958,11 @@
 							<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
 								{settingsVersionLabel}
 							</p>
-							{#if settingsUpdateReady}
+							{#if updateApplyError}
+								<p class="max-w-[14rem] truncate text-xs text-error-500" role="alert" title={updateApplyError}>
+									{updateApplyError}
+								</p>
+							{:else if settingsUpdateReady}
 								<span class="text-xs text-surface-700-300" role="status">
 									Update {updateStatus?.latest || 'ready'}
 								</span>
@@ -956,11 +972,7 @@
 									disabled={updateBusy}
 									onclick={() => void runUpdateApply()}
 								>
-									{updateBusy
-										? 'Working…'
-										: updateStatus?.mode === 'portable'
-											? 'Install'
-											: 'Download installer'}
+									{updateBusy ? 'Working…' : 'Download installer'}
 								</button>
 							{:else if settingsUpToDate}
 								<p class="truncate text-xs text-surface-700-300" role="status">Up to date</p>

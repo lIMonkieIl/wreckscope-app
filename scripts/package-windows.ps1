@@ -1,4 +1,4 @@
-﻿# Build Windows NSIS installer (default), portable zip, and bare updater exe.
+﻿# Build Windows NSIS installer + SHA256SUMS for GitHub Releases.
 # Requires: Go, pnpm, Wails CLI v3 (wails3), NSIS (makensis on PATH or under Program Files).
 param(
 	[string]$Version = "",
@@ -38,12 +38,10 @@ if (-not $Version) { $Version = "0.0.0" }
 
 $outDir = Join-Path $root "dist\windows"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-# Prior smoke leftovers (extracted portable zip) must not sit beside the bare updater exe.
+# Drop leftover portable smoke extract folders from older packages.
 Get-ChildItem $outDir -Directory -ErrorAction SilentlyContinue |
 	Where-Object { $_.Name -like '*portable*' } |
 	Remove-Item -Recurse -Force
-$straySettings = Join-Path $outDir "settings.json"
-if (Test-Path $straySettings) { Remove-Item $straySettings -Force }
 
 Write-Host "Building Wails binary + NSIS (windows/$Arch) VERSION=$Version..."
 $env:Path = (Split-Path $makensis) + ";" + $env:Path
@@ -66,49 +64,10 @@ $installerOut = Join-Path $outDir "WreckScope-$Version-windows-$Arch-setup.exe"
 Copy-Item $installer.FullName $installerOut -Force
 Write-Host "Installer: $installerOut"
 
-# Bare exe for in-app updater (portable swap). Do not use *-setup* for binary replace.
-# Running this bare asset alone is installed-mode (AppData) unless settings.json with
-# "portable": true sits beside it — never ship a sibling settings.json next to the bare exe.
-$bareOut = Join-Path $outDir "WreckScope-windows-$Arch.exe"
-Copy-Item $exe $bareOut -Force
-$bareSibling = Join-Path $outDir "settings.json"
-if (Test-Path $bareSibling) { Remove-Item $bareSibling -Force }
-Write-Host "Updater:   $bareOut"
-
-$stage = Join-Path $outDir "portable-stage"
-if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
-New-Item -ItemType Directory -Force -Path $stage | Out-Null
-Copy-Item $exe (Join-Path $stage "WreckScope.exe")
-# Portable mode: settings.json beside the exe with portable: true (no sibling marker file).
-# utf8NoBOM — PowerShell's "utf8" writes a BOM that breaks Go json.Unmarshal / portable detect.
-$portableSettings = @'
-{
-  "portable": true,
-  "setupCompleted": false,
-  "theme": "wreckscope",
-  "mode": "system",
-  "view": "recovery",
-  "speedUnit": "km/h",
-  "cautionSeconds": 1,
-  "alertSeconds": 3.5,
-  "speedThreshold": 3
-}
-'@
+# Sidecar for GitHub updater ChecksumAsset: SHA256SUMS
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText((Join-Path $stage "settings.json"), $portableSettings.Trim() + "`n", $utf8NoBom)
-$zip = Join-Path $outDir "WreckScope-$Version-windows-$Arch-portable.zip"
-if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -Force
-Remove-Item $stage -Recurse -Force
-Write-Host "Portable:  $zip"
-
-# Optional sidecar for GitHub updater ChecksumAsset: SHA256SUMS
 $sumsPath = Join-Path $outDir "SHA256SUMS"
-$lines = @()
-foreach ($f in @($installerOut, $bareOut, $zip)) {
-	$hash = (Get-FileHash -Algorithm SHA256 -Path $f).Hash.ToLowerInvariant()
-	$lines += "$hash  $(Split-Path $f -Leaf)"
-}
-[System.IO.File]::WriteAllText($sumsPath, ($lines -join "`n") + "`n", $utf8NoBom)
+$hash = (Get-FileHash -Algorithm SHA256 -Path $installerOut).Hash.ToLowerInvariant()
+[System.IO.File]::WriteAllText($sumsPath, "$hash  $(Split-Path $installerOut -Leaf)`n", $utf8NoBom)
 Write-Host "Checksums: $sumsPath"
 Write-Host "Done."

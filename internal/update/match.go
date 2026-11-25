@@ -7,36 +7,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/updater/providers/github"
 )
 
-// MatchPortable picks a bare Windows exe or portable zip for in-place swap.
-// Skips setup/installer packages and checksum sidecars.
-func MatchPortable(req updater.CheckRequest, assets []github.ReleaseAsset) int {
-	plat := strings.ToLower(req.Platform)
-	arch := strings.ToLower(req.Arch)
-
-	bestZip := -1
-	for i, a := range assets {
-		name := strings.ToLower(a.Name)
-		if skipAsset(name) || isSetupOrInstaller(name) {
-			continue
-		}
-		if plat != "" && !strings.Contains(name, plat) {
-			continue
-		}
-		if arch != "" && !archOK(name, arch) {
-			continue
-		}
-		// Prefer a bare .exe (updater swap target) over a zip.
-		if strings.HasSuffix(name, ".exe") {
-			return i
-		}
-		if bestZip < 0 && (strings.HasSuffix(name, ".zip") || strings.Contains(name, "portable")) {
-			bestZip = i
-		}
-	}
-	return bestZip
-}
-
-// MatchSetup picks the NSIS/setup installer for installed builds (launch, don't swap).
+// MatchSetup picks the NSIS/setup installer for installed builds (download + launch).
 func MatchSetup(req updater.CheckRequest, assets []github.ReleaseAsset) int {
 	plat := strings.ToLower(req.Platform)
 	arch := strings.ToLower(req.Arch)

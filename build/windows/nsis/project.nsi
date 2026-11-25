@@ -13,7 +13,7 @@ Unicode true
 ## !define REQUEST_EXECUTION_LEVEL "admin"
 ## !define WAILS_INSTALL_SCOPE     "user"
 ####
-# Match output binary / portable zip name.
+# Match output binary name.
 !define PRODUCT_EXECUTABLE "WreckScope.exe"
 ####
 !include "wails_tools.nsh"

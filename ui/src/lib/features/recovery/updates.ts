@@ -4,7 +4,7 @@ export type UpdateStatus = {
 	current: string;
 	latest: string;
 	available: boolean;
-	mode: 'portable' | 'installed' | string;
+	mode: 'installed' | string;
 	message: string;
 };
 

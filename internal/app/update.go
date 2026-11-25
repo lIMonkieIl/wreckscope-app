@@ -14,7 +14,7 @@ func (a *App) AppVersion() string {
 	return version.Version
 }
 
-// UpdateMode is "portable" or "installed".
+// UpdateMode is "installed" (NSIS + AppData).
 func (a *App) UpdateMode() string {
 	return update.Mode()
 }
@@ -37,8 +37,7 @@ func (a *App) CheckForUpdates() (update.Status, error) {
 	return st, err
 }
 
-// ApplyUpdate downloads and applies the pending update (call CheckForUpdates first).
-// Portable: in-place swap + restart. Installed: launch setup installer.
+// ApplyUpdate downloads the setup installer to AppData, launches it, then quits.
 func (a *App) ApplyUpdate() (update.Status, error) {
 	if a.wails == nil {
 		return update.Status{Current: version.Version, Message: "app not ready"}, errNoAppContext

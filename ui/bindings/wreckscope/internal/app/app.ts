@@ -25,8 +25,7 @@ export function AppVersion(): $CancellablePromise<string> {
 }
 
 /**
- * ApplyUpdate downloads and applies the pending update (call CheckForUpdates first).
- * Portable: in-place swap + restart. Installed: launch setup installer.
+ * ApplyUpdate downloads the setup installer to AppData, launches it, then quits.
  */
 export function ApplyUpdate(): $CancellablePromise<update$0.Status> {
     return $Call.ByID(2287023727);
@@ -120,7 +119,7 @@ export function SaveAppearance(theme: string, mode: string): $CancellablePromise
 
 /**
  * SaveSettings persists shared settings. Empty telemetryConfigPath / setupCompleted
- * keep current values (UI forms omit them). Portable stays latched once set.
+ * keep current values (UI forms omit them).
  */
 export function SaveSettings(settings: racefeed$0.Settings): $CancellablePromise<racefeed$0.Settings> {
     return $Call.ByID(849551334, settings);
@@ -156,7 +155,7 @@ export function ToggleMedic(slot: number): $CancellablePromise<number[] | null> 
 }
 
 /**
- * UpdateMode is "portable" or "installed".
+ * UpdateMode is "installed" (NSIS + AppData).
  */
 export function UpdateMode(): $CancellablePromise<string> {
     return $Call.ByID(2877189504);

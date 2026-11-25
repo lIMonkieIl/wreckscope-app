@@ -17,26 +17,14 @@ const (
 // PathOverride is for tests.
 var PathOverride string
 
-// Test hooks.
-var (
-	lookupExe        = os.Executable
-	lookupUserConfig = os.UserConfigDir
-)
+// Test hook.
+var lookupUserConfig = os.UserConfigDir
 
-// Path returns settings.json for this install mode.
-// Portable: settings.json beside the exe with "portable": true.
-// Installed / bare (no portable flag): %AppData%\WreckScope\settings.json.
+// Path returns %AppData%\WreckScope\settings.json.
+// All app data lives under AppData; the install dir holds binaries only.
 func Path() (string, error) {
 	if PathOverride != "" {
 		return PathOverride, nil
-	}
-	exe, err := lookupExe()
-	if err != nil {
-		return "", err
-	}
-	beside := filepath.Join(filepath.Dir(exe), fileName)
-	if PortableFile(beside) {
-		return beside, nil
 	}
 	dir, err := dataDir()
 	if err != nil {
@@ -45,19 +33,10 @@ func Path() (string, error) {
 	return filepath.Join(dir, fileName), nil
 }
 
-// WebviewDataDir is a stable WebView2 profile path (not %AppData%\<exe-name>).
-// Portable: <exeDir>\webview-data. Installed/bare: %AppData%\WreckScope\webview.
+// WebviewDataDir is %AppData%\WreckScope\webview (stable; not named after the exe).
 func WebviewDataDir() (string, error) {
 	if PathOverride != "" {
 		return filepath.Join(filepath.Dir(PathOverride), "webview"), nil
-	}
-	exe, err := lookupExe()
-	if err != nil {
-		return "", err
-	}
-	exeDir := filepath.Dir(exe)
-	if PortableFile(filepath.Join(exeDir, fileName)) {
-		return filepath.Join(exeDir, "webview-data"), nil
 	}
 	dir, err := dataDir()
 	if err != nil {
@@ -66,19 +45,16 @@ func WebviewDataDir() (string, error) {
 	return filepath.Join(dir, "webview"), nil
 }
 
-// PortableFile is true when path is settings.json with portable: true.
-func PortableFile(path string) bool {
-	data, err := os.ReadFile(path)
+// UpdatesDir is %AppData%\WreckScope\updates (downloaded setup packages).
+func UpdatesDir() (string, error) {
+	if PathOverride != "" {
+		return filepath.Join(filepath.Dir(PathOverride), "updates"), nil
+	}
+	dir, err := dataDir()
 	if err != nil {
-		return false
+		return "", err
 	}
-	var probe struct {
-		Portable bool `json:"portable"`
-	}
-	if json.Unmarshal(stripUTF8BOM(data), &probe) != nil {
-		return false
-	}
-	return probe.Portable
+	return filepath.Join(dir, "updates"), nil
 }
 
 func dataDir() (string, error) {
@@ -99,11 +75,8 @@ func Load(path string) (racefeed.Settings, error) {
 	return value, err
 }
 
-// Save writes atomically. Keeps portable: true once set on that file.
+// Save writes atomically.
 func Save(path string, value racefeed.Settings) error {
-	if existing, err := Load(path); err == nil && existing.Portable {
-		value.Portable = true
-	}
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err

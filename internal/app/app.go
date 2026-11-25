@@ -64,8 +64,7 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 	} else if saved, err := settings.Load(path); err == nil {
 		_, _ = a.engine.ApplySettings(saved, nil)
 	} else if os.IsNotExist(err) {
-		// First run (bare/setup): seed AppData with brand defaults (wreckscope + system).
-		// Portable zip already ships settings.json beside the exe.
+		// First run: seed AppData with brand defaults (wreckscope + system).
 		if saveErr := settings.Save(path, a.engine.Settings()); saveErr != nil {
 			log.Printf("Seed settings: %v", saveErr)
 		}
@@ -246,14 +245,13 @@ func (a *App) GetSettings() racefeed.Settings {
 }
 
 // SaveSettings persists shared settings. Empty telemetryConfigPath / setupCompleted
-// keep current values (UI forms omit them). Portable stays latched once set.
+// keep current values (UI forms omit them).
 func (a *App) SaveSettings(settings racefeed.Settings) (racefeed.Settings, error) {
 	current := a.engine.Settings()
 	if strings.TrimSpace(settings.TelemetryConfigPath) == "" {
 		settings.TelemetryConfigPath = current.TelemetryConfigPath
 	}
 	settings.SetupCompleted = current.SetupCompleted
-	settings.Portable = current.Portable || settings.Portable
 	return a.persistSettings(settings)
 }
 

@@ -13,8 +13,7 @@ import (
 
 type Car = detector.Car
 
-// Settings: UI + detection (AppData when installed; beside exe when portable).
-// Portable latches settings.json next to the exe for zip builds.
+// Settings: UI + detection under %AppData%\WreckScope\settings.json.
 // TelemetryConfigPath is the game config.json path (game file stays separate).
 // SetupCompleted is first-run only, not "telemetry already enabled".
 type Settings struct {
@@ -27,7 +26,6 @@ type Settings struct {
 	View                string `json:"view"` // race | recovery
 	TelemetryConfigPath string `json:"telemetryConfigPath,omitempty"`
 	SetupCompleted      bool   `json:"setupCompleted"`
-	Portable            bool   `json:"portable,omitempty"`
 }
 
 type Snapshot struct {

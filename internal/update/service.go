@@ -2,11 +2,9 @@ package update
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
-	"time"
 
 	"wreckscope/internal/version"
 
@@ -16,10 +14,9 @@ import (
 )
 
 const (
-	githubRepo     = "lIMonkieIl/wreckscope-app"
-	checksumAsset  = "SHA256SUMS"
-	ModePortable   = "portable"
-	ModeInstalled  = "installed"
+	githubRepo    = "lIMonkieIl/wreckscope-app"
+	checksumAsset = "SHA256SUMS"
+	ModeInstalled = "installed"
 )
 
 // Status is returned to the UI after a check.
@@ -31,17 +28,12 @@ type Status struct {
 	Message   string `json:"message"`
 }
 
-// Configure wires app.Updater for this install mode. WindowNone — UI lives in Settings.
+// Configure wires app.Updater for installed builds. WindowNone — UI lives in Settings.
 func Configure(app *application.App) error {
-	portable := IsPortable()
-	matcher := MatchSetup
-	if portable {
-		matcher = MatchPortable
-	}
 	gh, err := github.New(github.Config{
 		Repository:    githubRepo,
 		ChecksumAsset: checksumAsset,
-		AssetMatcher:  matcher,
+		AssetMatcher:  MatchSetup,
 	})
 	if err != nil {
 		return err
@@ -53,11 +45,8 @@ func Configure(app *application.App) error {
 	})
 }
 
-// Mode returns portable or installed.
+// Mode is always installed (NSIS + AppData).
 func Mode() string {
-	if IsPortable() {
-		return ModePortable
-	}
 	return ModeInstalled
 }
 
@@ -65,7 +54,7 @@ func Mode() string {
 func Check(ctx context.Context, app *application.App) (Status, error) {
 	out := Status{
 		Current: version.Version,
-		Mode:    Mode(),
+		Mode:    ModeInstalled,
 	}
 	rel, err := app.Updater.Check(ctx)
 	if err != nil {
@@ -78,77 +67,23 @@ func Check(ctx context.Context, app *application.App) (Status, error) {
 	}
 	out.Available = true
 	out.Latest = rel.Version
-	if out.Mode == ModePortable {
-		out.Message = "Update " + rel.Version + " available"
-	} else {
-		out.Message = "Installer " + rel.Version + " available"
-	}
+	out.Message = "Installer " + rel.Version + " available"
 	return out, nil
 }
 
-// Apply downloads the pending release. Portable: stage + restart (in-place swap).
-// Installed: stage setup exe, launch it, then quit so the installer can replace files.
+// Apply downloads the setup package to %AppData%\WreckScope\updates, launches it,
+// then quits. Does not stage beside Program Files (that caused the Download installer no-op).
 func Apply(ctx context.Context, app *application.App) (Status, error) {
-	out := Status{
+	return applyInstalled(ctx, app, Status{
 		Current: version.Version,
-		Mode:    Mode(),
-	}
-	state := app.Updater.State()
-	if state != updater.StateAvailable && state != updater.StateReady {
-		st, err := Check(ctx, app)
-		if err != nil {
-			return st, err
-		}
-		if !st.Available {
-			return st, nil
-		}
-		out = st
-	}
-
-	state = app.Updater.State()
-	if state != updater.StateReady {
-		if err := app.Updater.DownloadAndInstall(ctx); err != nil {
-			out.Message = err.Error()
-			return out, err
-		}
-	}
-	out.Available = true
-
-	if out.Mode == ModePortable {
-		out.Message = "Restarting to apply update"
-		if out.Latest != "" {
-			out.Message = "Restarting to apply " + out.Latest
-		}
-		if err := app.Updater.Restart(ctx); err != nil {
-			out.Message = err.Error()
-			return out, err
-		}
-		return out, nil
-	}
-
-	path := app.Updater.DownloadedPath()
-	if path == "" {
-		out.Message = "Installer download missing"
-		return out, fmt.Errorf("updater: empty downloaded path")
-	}
-	if err := launch(path); err != nil {
-		out.Message = err.Error()
-		return out, err
-	}
-	out.Message = "Opened installer"
-	if out.Latest != "" {
-		out.Message = "Opened installer " + out.Latest
-	}
-	go func() {
-		time.Sleep(500 * time.Millisecond)
-		app.Quit()
-	}()
-	return out, nil
+		Mode:    ModeInstalled,
+	})
 }
 
 func launch(path string) error {
 	switch runtime.GOOS {
 	case "windows":
+		// start "" <path> — empty title so path is not treated as the window title.
 		return exec.Command("cmd", "/C", "start", "", path).Start()
 	default:
 		cmd := exec.Command(path)
