@@ -25,12 +25,15 @@ wails3 task dev
 Alternate (no watcher): start Vite in one terminal, then build/run in another:
 
 ```powershell
-pnpm --dir ui dev -- --host 127.0.0.1 --port 9245 --strictPort
+pnpm --dir ui exec vite --host 127.0.0.1 --port 9245 --strictPort
 # other terminal:
 $env:FRONTEND_DEVSERVER_URL = "http://127.0.0.1:9245"
 wails3 task build DEV=true
 wails3 task run
 ```
+
+(`pnpm run dev -- --port 9245` can hand Vite a literal `--`, so it stays on :5173 — use `pnpm exec vite` or rely on `vite.config.ts` / `WAILS_VITE_PORT`.)
+
 
 `ui/bindings/` are the generated Wails v3 TypeScript bindings — keep and regenerate with `wails3 generate bindings` after Go API changes (old `wailsjs` is gone).
 

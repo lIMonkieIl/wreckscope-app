@@ -219,24 +219,25 @@ tasks:
 
   ui:dev:npm:
     dir: ui
+    # Call vite directly — `npm/pnpm run dev -- --port …` can forward a literal
+    # `--` into Vite 8, which then ignores host/port and falls back to :5173.
     cmds:
-      # Bind IPv4 loopback — AssetServer proxies with tcp4 on Windows.
-      - npm run dev -- --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
+      - npx vite --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   ui:dev:yarn:
     dir: ui
     cmds:
-      - yarn dev --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
+      - yarn exec vite --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   ui:dev:pnpm:
     dir: ui
     cmds:
-      - pnpm dev -- --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
+      - pnpm exec vite --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   ui:dev:bun:
     dir: ui
     cmds:
-      - bun run dev --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
+      - bunx vite --host 127.0.0.1 --port {{.VITE_PORT}} --strictPort
 
   update:build-assets:
     summary: Updates the build assets
