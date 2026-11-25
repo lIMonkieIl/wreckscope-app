@@ -1,4 +1,4 @@
-# Build Windows NSIS installer (default) and portable zip.
+﻿# Build Windows NSIS installer (default) and portable zip.
 # Requires: Go, pnpm, Wails CLI, NSIS (makensis on PATH or under Program Files).
 param(
 	[string]$Version = "",
@@ -38,7 +38,6 @@ $outDir = Join-Path $root "dist\windows"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 Write-Host "Building Wails binary + NSIS ($Platform)..."
-# Prefer the makensis Wails will invoke via PATH for this process.
 $env:Path = (Split-Path $makensis) + ";" + $env:Path
 wails build -platform $Platform -nsis -webview2 download
 if ($LASTEXITCODE -ne 0) { throw "wails build failed ($LASTEXITCODE)" }
@@ -58,8 +57,22 @@ $stage = Join-Path $outDir "portable-stage"
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 Copy-Item $exe (Join-Path $stage "WreckScope.exe")
-# Marker forces settings.json beside the exe.
-New-Item -ItemType File -Path (Join-Path $stage "portable") -Force | Out-Null
+# Portable mode: settings.json beside the exe with portable: true (no sibling marker file).
+# utf8NoBOM — PowerShell's "utf8" writes a BOM that breaks Go json.Unmarshal / portable detect.
+$portableSettings = @'
+{
+  "portable": true,
+  "theme": "wreckscope",
+  "mode": "system",
+  "view": "recovery",
+  "speedUnit": "km/h",
+  "cautionSeconds": 1,
+  "alertSeconds": 3.5,
+  "speedThreshold": 3
+}
+'@
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText((Join-Path $stage "settings.json"), $portableSettings.Trim() + "`n", $utf8NoBom)
 $zip = Join-Path $outDir "WreckScope-$Version-windows-amd64-portable.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -Force

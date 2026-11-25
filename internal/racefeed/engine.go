@@ -14,6 +14,7 @@ import (
 type Car = detector.Car
 
 // Settings: UI + detection (AppData when installed; beside exe when portable).
+// Portable latches settings.json next to the exe for zip builds.
 // TelemetryConfigPath is the game config.json path (game file stays separate).
 // SetupCompleted is first-run only, not "telemetry already enabled".
 type Settings struct {
@@ -26,6 +27,7 @@ type Settings struct {
 	View                string `json:"view"` // race | recovery
 	TelemetryConfigPath string `json:"telemetryConfigPath,omitempty"`
 	SetupCompleted      bool   `json:"setupCompleted"`
+	Portable            bool   `json:"portable,omitempty"`
 }
 
 type Snapshot struct {
@@ -82,7 +84,7 @@ func defaultSettings() Settings {
 		Settings:  detector.Settings{CautionSeconds: 1.0, AlertSeconds: 3.5, SpeedThreshold: 3.0},
 		SpeedUnit: "km/h",
 		Theme:     "wreckscope",
-		Mode:      "dark",
+		Mode:      "system",
 		View:      "recovery",
 	}
 }
@@ -155,7 +157,7 @@ func normalizeAppearance(theme, mode, fallbackTheme, fallbackMode string) (strin
 		mode = fallbackMode
 	}
 	if mode == "" {
-		mode = "dark"
+		mode = "system"
 	}
 	return theme, mode
 }

@@ -32,7 +32,7 @@ Installer + portable zip:
 Outputs under `dist\windows\`:
 
 - `WreckScope-<ver>-windows-amd64-setup.exe` — NSIS installer
-- `WreckScope-<ver>-windows-amd64-portable.zip` — exe + `portable` marker
+- `WreckScope-<ver>-windows-amd64-portable.zip` — exe + `settings.json` (`portable: true`)
 
 Binary-only (no installer):
 
@@ -42,8 +42,8 @@ wails build
 
 ## Settings
 
-- **Installed** (no `portable` file beside the exe): `%AppData%\WreckScope\settings.json`
-- **Portable** (zip includes an empty `portable` file): `settings.json` next to the exe
+- **Installed** (no portable settings beside the exe): `%AppData%\WreckScope\settings.json`
+- **Portable** (zip ships `settings.json` with `"portable": true`): settings stay next to the exe
 
 Game telemetry `config.json` stays under `My Games\Wreckfest 2\...\savegame\telemetry\`. WreckScope can enable UDP on `127.0.0.1:23123` and keeps a sibling backup before writing.
 

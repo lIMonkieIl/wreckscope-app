@@ -233,13 +233,14 @@ func (a *App) GetSettings() racefeed.Settings {
 }
 
 // SaveSettings persists shared settings. Empty telemetryConfigPath / setupCompleted
-// keep current values (UI forms omit them).
+// keep current values (UI forms omit them). Portable stays latched once set.
 func (a *App) SaveSettings(settings racefeed.Settings) (racefeed.Settings, error) {
 	current := a.engine.Settings()
 	if strings.TrimSpace(settings.TelemetryConfigPath) == "" {
 		settings.TelemetryConfigPath = current.TelemetryConfigPath
 	}
 	settings.SetupCompleted = current.SetupCompleted
+	settings.Portable = current.Portable || settings.Portable
 	return a.persistSettings(settings)
 }
 

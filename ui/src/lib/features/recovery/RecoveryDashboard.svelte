@@ -55,7 +55,7 @@
 		muteAlertSound: false,
 		drawTrackOutline: false,
 		theme: 'wreckscope',
-		mode: 'dark',
+		mode: 'system',
 		view: 'recovery',
 	};
 

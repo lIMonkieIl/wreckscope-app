@@ -110,7 +110,7 @@ func TestLANHTTPInteractive(t *testing.T) {
 		t.Fatal(err)
 	}
 	resp.Body.Close()
-	if settings["theme"] != "wreckscope" || settings["mode"] != "dark" {
+	if settings["theme"] != "wreckscope" || settings["mode"] != "system" {
 		t.Fatalf("default settings=%v", settings)
 	}
 

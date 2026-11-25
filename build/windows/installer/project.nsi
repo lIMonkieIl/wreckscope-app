@@ -52,26 +52,54 @@ ManifestDPIAware true
 
 !define MUI_ICON "..\icon.ico"
 !define MUI_UNICON "..\icon.ico"
-# !define MUI_WELCOMEFINISHPAGE_BITMAP "resources\leftimage.bmp" #Include this to add a bitmap on the left side of the Welcome Page. Must be a size of 164x314
-!define MUI_FINISHPAGE_NOAUTOCLOSE # Wait on the INSTFILES page so the user can take a look into the details of the installation steps
-!define MUI_ABORTWARNING # This will warn the user if they exit from the installer.
 
-!insertmacro MUI_PAGE_WELCOME # Welcome to the installer page.
+# WreckScope brand: #111820 / #52C3FF / #007DAA
+!define MUI_BGCOLOR 111820
+!define MUI_TEXTCOLOR FFFFFF
+!define MUI_HEADERIMAGE
+!define MUI_HEADERIMAGE_BITMAP "resources\header.bmp"
+!define MUI_HEADERIMAGE_RIGHT
+!define MUI_WELCOMEFINISHPAGE_BITMAP "resources\welcome.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "resources\welcome.bmp"
+!define MUI_INSTFILESPAGE_COLORS "FFFFFF 111820"
+# License body is black text — keep a light box (dark page chrome stays via MUI_BGCOLOR).
+!define MUI_LICENSEPAGE_BGCOLOR FFFFFF
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+!define MUI_ABORTWARNING
+
+!define MUI_WELCOMEPAGE_TITLE "Welcome to $(^NameDA) Setup"
+!define MUI_WELCOMEPAGE_TEXT "Setup will install $(^NameDA) on your computer.$\r$\n$\r$\nClick Next to continue."
+
+!define MUI_FINISHPAGE_TITLE "$(^NameDA) is installed"
+!define MUI_FINISHPAGE_TEXT "$(^NameDA) has been installed on your computer.$\r$\n$\r$\nClick Finish to close Setup."
+!define MUI_FINISHPAGE_RUN "$INSTDIR\${PRODUCT_EXECUTABLE}"
+!define MUI_FINISHPAGE_RUN_TEXT "Run $(^NameDA)"
+!define MUI_FINISHPAGE_SHOWREADME ""
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Create desktop shortcut"
+!define MUI_FINISHPAGE_SHOWREADME_FUNCTION finish.CreateDesktopShortcut
+!define MUI_FINISHPAGE_LINK_COLOR 52C3FF
+
+!insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\..\..\LICENSE"
-!insertmacro MUI_PAGE_DIRECTORY # In which folder install page.
-!insertmacro MUI_PAGE_INSTFILES # Installing page.
-!insertmacro MUI_PAGE_FINISH # Finished installation page.
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+# SHOW runs after MUI colors the finish dialog; fix checkbox label contrast (NSIS bug #443).
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW finish.FixCheckboxColors
+!insertmacro MUI_PAGE_FINISH
 
-!insertmacro MUI_UNPAGE_INSTFILES # Uinstalling page
+!insertmacro MUI_UNPAGE_INSTFILES
 
-!insertmacro MUI_LANGUAGE "English" # Set the Language of the installer
+!insertmacro MUI_LANGUAGE "English"
+
+BrandingText "$(^Name)"
+
 
 ## The following two statements can be used to sign the installer and the uninstaller. The path to the binaries are provided in %1
 #!uninstfinalize 'signtool --file "%1"'
 #!finalize 'signtool --file "%1"'
 
 Name "${INFO_PRODUCTNAME}"
-OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
+OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe"
 !ifdef WAILS_INSTALL_SCOPE
   !if "${WAILS_INSTALL_SCOPE}" == "user"
     InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}"
@@ -80,11 +108,26 @@ OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the inst
   !endif
 !else
   InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}"
-!endif # Default installing folder ($PROGRAMFILES is Program Files folder).
-ShowInstDetails show # This will always show the installation details.
+!endif
+ShowInstDetails show
 
 Function .onInit
    !insertmacro wails.checkArchitecture
+FunctionEnd
+
+Function finish.CreateDesktopShortcut
+  SetShellVarContext current
+  CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
+FunctionEnd
+
+Function finish.FixCheckboxColors
+  # Visual styles ignore SetCtlColors on checkbox text; clear theme then set white on dark.
+  GetDlgItem $R0 $MUI_HWND 1203
+  System::Call 'uxtheme::SetWindowTheme(p$R0,w" ",w" ")'
+  SetCtlColors $R0 FFFFFF 111820
+  GetDlgItem $R0 $MUI_HWND 1204
+  System::Call 'uxtheme::SetWindowTheme(p$R0,w" ",w" ")'
+  SetCtlColors $R0 FFFFFF 111820
 FunctionEnd
 
 Section
@@ -97,7 +140,6 @@ Section
     !insertmacro wails.files
 
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
-    CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
 
     !insertmacro wails.associateFiles
     !insertmacro wails.associateCustomProtocols
@@ -108,7 +150,7 @@ SectionEnd
 Section "uninstall"
     !insertmacro wails.setShellContext
 
-    RMDir /r "$AppData\${PRODUCT_EXECUTABLE}" # Remove the WebView2 DataPath
+    RMDir /r "$AppData\${PRODUCT_EXECUTABLE}"
 
     RMDir /r $INSTDIR
 

@@ -1,10 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="wreckscope" data-mode="dark" class="dark">
+<html lang="en" data-theme="wreckscope">
 <head>
     <meta charset="UTF-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <link rel="icon" type="image/svg+xml" href="/brand-mark.svg"/>
     <title>WreckScope</title>
+    <script>
+        (function () {
+            var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.dataset.mode = dark ? 'dark' : 'light';
+            document.documentElement.classList.toggle('dark', dark);
+        })();
+    </script>
 </head>
 <body>
 <div id="app"></div>
