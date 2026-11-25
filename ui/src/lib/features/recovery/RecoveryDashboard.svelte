@@ -18,6 +18,14 @@
 		probeTelemetryAt,
 		restoreTelemetryBackup,
 	} from './telemetrySetup.ts';
+	import {
+		applyUpdate,
+		checkForUpdates,
+		getAppVersion,
+		lastUpdateStatus,
+		onUpdateAvailable,
+		type UpdateStatus,
+	} from './updates.ts';
 	import { Dialog, Popover, Portal, QrCode } from '@skeletonlabs/skeleton-svelte';
 	import ThemePicker from '#lib/features/appearance/ThemePicker.svelte';
 	import { setCommittedDocumentTheme } from '#lib/features/appearance/themeHover.ts';
@@ -180,6 +188,9 @@
 	let settingsSaveGen = 0;
 	/** Optimistic settings until the stream confirms. */
 	let awaitedSettings: DetectionSettings | null = null;
+	let appVersion = $state('');
+	let updateStatus = $state<UpdateStatus | null>(null);
+	let updateBusy = $state(false);
 	/** Optimistic live/demo until the stream confirms. */
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
 	let liveSettings = $derived(withNormalizedSettings(snapshot.settings));
@@ -503,11 +514,23 @@
 		const stopOpenSettings = onOpenSettingsRequest(() => {
 			void editSettings(true);
 		});
+		const stopUpdateNotice = onUpdateAvailable((status) => {
+			updateStatus = status;
+		});
+		if (hasDesktopBridge()) {
+			void getAppVersion().then((v) => {
+				appVersion = v;
+			});
+			void lastUpdateStatus().then((status) => {
+				if (status.available || status.message) updateStatus = status;
+			});
+		}
 		return () => {
 			compact.removeEventListener('change', syncLayout);
 			orientation.removeEventListener('change', syncOrientation);
 			colorScheme.removeEventListener('change', syncColorScheme);
 			stopOpenSettings();
+			stopUpdateNotice();
 			unsubscribe();
 			map?.destroy();
 			document.removeEventListener('click', unlock);
@@ -804,6 +827,45 @@
 			configBusy = false;
 		}
 	}
+
+	async function runUpdateCheck() {
+		if (!hasDesktopBridge() || updateBusy) return;
+		updateBusy = true;
+		try {
+			updateStatus = await checkForUpdates();
+		} catch (error) {
+			updateStatus = {
+				current: appVersion,
+				latest: '',
+				available: false,
+				mode: '',
+				message: error instanceof Error ? error.message : String(error),
+			};
+		} finally {
+			updateBusy = false;
+		}
+	}
+
+	async function runUpdateApply() {
+		if (!hasDesktopBridge() || updateBusy || !updateStatus?.available) return;
+		updateBusy = true;
+		try {
+			updateStatus = await applyUpdate();
+		} catch (error) {
+			updateStatus = {
+				...(updateStatus ?? {
+					current: appVersion,
+					latest: '',
+					available: false,
+					mode: '',
+					message: '',
+				}),
+				message: error instanceof Error ? error.message : String(error),
+			};
+		} finally {
+			updateBusy = false;
+		}
+	}
 	async function showPhone(open: boolean) {
 		phoneOpen = open;
 		if (!open) return;
@@ -1013,6 +1075,48 @@
 									onMode={(value) => patchSettings({ mode: value })}
 								/>
 							</section>
+
+							{#if hasDesktopBridge()}
+								<section
+									class="min-w-0 space-y-3"
+									class:settings-secondary={settingsSecondary}
+								>
+									<header
+										class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
+									>
+										Updates
+									</header>
+									<p class="text-sm text-surface-700-300">
+										Version {appVersion || '…'}{#if updateStatus?.mode}
+											· {updateStatus.mode}{/if}
+									</p>
+									{#if updateStatus?.message}
+										<p role="status" class="text-sm text-surface-700-300">{updateStatus.message}</p>
+									{/if}
+									<div class="flex flex-wrap gap-2">
+										<button
+											type="button"
+											class="btn preset-filled-primary-500"
+											disabled={updateBusy}
+											onclick={() => void runUpdateCheck()}
+										>
+											{updateBusy ? 'Working…' : 'Check for updates'}
+										</button>
+										{#if updateStatus?.available}
+											<button
+												type="button"
+												class="btn preset-tonal"
+												disabled={updateBusy}
+												onclick={() => void runUpdateApply()}
+											>
+												{updateStatus.mode === 'installed'
+													? 'Download installer'
+													: 'Install update'}
+											</button>
+										{/if}
+									</div>
+								</section>
+							{/if}
 
 							<section
 								class="min-w-0 space-y-3"
