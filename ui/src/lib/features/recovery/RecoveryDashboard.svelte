@@ -183,19 +183,19 @@
 	/** Optimistic live/demo until the stream confirms. */
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
 	let liveSettings = $derived(withNormalizedSettings(snapshot.settings));
+	/** Desktop first-run UX while setupCompleted is false (independent of stream). */
+	let firstRunSetup = $derived(hasDesktopBridge() && !liveSettings.setupCompleted);
 	/** Desktop first-run: keep Settings open until setupCompleted. */
-	let setupIncomplete = $derived(
-		hasDesktopBridge() && streamReady && !liveSettings.setupCompleted,
-	);
+	let setupIncomplete = $derived(firstRunSetup && streamReady);
 	/** Desktop: bad/missing Config → open Settings and highlight. */
 	let configNeedsAttention = $derived(
 		hasDesktopBridge() && streamReady && configProbed && !configLooksReady,
 	);
 	/** First-run or broken Config: emphasize the Config section. */
-	let configHighlighted = $derived(setupIncomplete || configNeedsAttention);
+	let configHighlighted = $derived(firstRunSetup || configNeedsAttention);
 	/** Soften other Settings sections until telemetry Config is ready on first run. */
-	let settingsSecondary = $derived(setupIncomplete && !configLooksReady);
-	let settingsDialogTitle = $derived(setupIncomplete ? 'Set up WreckScope' : 'Settings');
+	let settingsSecondary = $derived(firstRunSetup && !configLooksReady);
+	let settingsDialogTitle = $derived(firstRunSetup ? 'Set up WreckScope' : 'Settings');
 	/** Dim dash until Config is ready; header stays usable. */
 	let configSmoke = $derived(configNeedsAttention);
 	let dashSmoked = $derived(phoneVeil || configSmoke);
@@ -601,9 +601,7 @@
 		try {
 			const status = await probeTelemetry();
 			applyConfigStatus(status, snapshot.settings.telemetryConfigPath || '');
-			if (status.ready && status.valid && !snapshot.settings.setupCompleted) {
-				await markSetupComplete();
-			}
+			// Do not mark setupCompleted here — first-run UX stays until the user closes Settings.
 		} catch (error) {
 			configValid = false;
 			configReady = false;
@@ -618,6 +616,7 @@
 
 	async function editSettings(open: boolean) {
 		if (!open) {
+			// User finished / dismissed first-run (or normal Settings).
 			if (hasDesktopBridge() && !snapshot.settings.setupCompleted) {
 				await markSetupComplete();
 			}
@@ -774,7 +773,7 @@
 		try {
 			const status = await enableTelemetryAt(path);
 			applyConfigStatus(status, path);
-			if (status.ready && status.valid) await markSetupComplete();
+			// Keep first-run dialog until the user closes it.
 		} catch (error) {
 			configValid = false;
 			configReady = false;
@@ -876,7 +875,7 @@
 					width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
 				>
 					<div class="@container min-w-0 w-full">
-					{#if setupIncomplete}
+					{#if firstRunSetup}
 						<p class="mb-5 text-sm text-surface-700-300">
 							Connect Wreckfest 2 telemetry so the live feed can start. Find or choose the game’s
 							<code class="font-mono text-xs">config.json</code>, then Configure if needed.
@@ -894,14 +893,14 @@
 									<header
 										class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
 									>
-										{setupIncomplete ? 'Connect telemetry' : 'Config'}
+										{firstRunSetup ? 'Connect telemetry' : 'Config'}
 									</header>
 									<div class="min-w-0" inert={configBusy || undefined}>
 										<span class="mb-1 flex items-center gap-1.5 text-sm font-semibold">
-											{setupIncomplete
+											{firstRunSetup
 												? 'Wreckfest 2 telemetry config.json'
 												: 'Telemetry config file'}
-											{#if !setupIncomplete}
+											{#if !firstRunSetup}
 												<SettingMaturityBadge maturity="new" />
 											{/if}
 											{#if configPathSelected}
