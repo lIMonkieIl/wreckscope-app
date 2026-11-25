@@ -13,7 +13,8 @@
 			| 'close'
 			| 'check'
 			| 'reset'
-			| 'find';
+			| 'find'
+			| 'update';
 	} = $props();
 </script>
 
@@ -56,5 +57,7 @@
 		<path d="m5 12 5 5L20 7" />
 	{:else if name === 'find'}
 		<circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+	{:else if name === 'update'}
+		<path d="M21 12a9 9 0 0 0-15.5-6.3M3 4v5h5" /><path d="M3 12a9 9 0 0 0 15.5 6.3M21 20v-5h-5" />
 	{/if}
 </svg>

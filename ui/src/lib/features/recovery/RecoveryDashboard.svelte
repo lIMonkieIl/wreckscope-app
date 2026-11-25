@@ -44,6 +44,9 @@
 	import SettingMaturityBadge from '#lib/components/SettingMaturityBadge.svelte';
 	import ControlIcon from '#lib/components/ControlIcon.svelte';
 	import { mountRescueMap } from './rescue-map';
+	import UpdateHeaderControls, {
+		type UpdateHeaderPhase,
+	} from './UpdateHeaderControls.svelte';
 	import type {
 		DashboardView,
 		DetectionSettings,
@@ -55,6 +58,14 @@
 
 	/** Temporary: stack every Settings-header update look. Flip to false (or remove) when done reviewing. */
 	const UPDATE_HEADER_PREVIEW = true;
+	const UPDATE_HEADER_PREVIEW_PHASES: { id: UpdateHeaderPhase; label: string }[] = [
+		{ id: 'idle', label: 'idle' },
+		{ id: 'checking', label: 'checking' },
+		{ id: 'up-to-date', label: 'up to date' },
+		{ id: 'available', label: 'available' },
+		{ id: 'downloading', label: 'downloading' },
+		{ id: 'error', label: 'error' },
+	];
 
 	type DockDrag = { id: number; start: number; size: number; span: number };
 	const defaults: DetectionSettings = {
@@ -915,6 +926,15 @@
 			!!updateStatus.message &&
 			!updateApplyError,
 	);
+	let settingsUpdatePhase = $derived.by((): UpdateHeaderPhase => {
+		if (!desktopBridge) return 'idle';
+		if (updateBusy && settingsUpdateReady) return 'downloading';
+		if (updateBusy) return 'checking';
+		if (updateApplyError) return 'error';
+		if (settingsUpdateReady) return 'available';
+		if (settingsUpToDate) return 'up-to-date';
+		return 'idle';
+	});
 	async function showPhone(open: boolean) {
 		phoneOpen = open;
 		if (!open) return;
@@ -999,110 +1019,36 @@
 								<p class="text-[10px] uppercase tracking-wide text-surface-600-400">
 									Update UI preview — set UPDATE_HEADER_PREVIEW false in RecoveryDashboard.svelte
 								</p>
-								{#each [
-									{ id: 'idle', label: 'idle' },
-									{ id: 'checking', label: 'checking' },
-									{ id: 'up-to-date', label: 'up to date' },
-									{ id: 'available', label: 'available' },
-									{ id: 'downloading', label: 'downloading' },
-									{ id: 'error', label: 'error' },
-								] as row (row.id)}
+								{#each UPDATE_HEADER_PREVIEW_PHASES as row (row.id)}
 									<div
 										class="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded border border-dashed border-surface-300-700/50 px-2 py-1"
 									>
 										<span class="mr-auto shrink-0 text-[10px] text-surface-600-400"
 											>{row.label}</span
 										>
-										<p class="truncate text-xs text-surface-700-300" title="ver: 0.1.0">
-											ver: 0.1.0
-										</p>
-										{#if row.id === 'error'}
-											<p
-												class="max-w-[14rem] truncate text-xs text-error-500"
-												role="alert"
-												title="Checksum mismatch — update not applied"
-											>
-												Checksum mismatch — update not applied
-											</p>
-											<button type="button" class="btn preset-tonal-surface btn-sm"
-												>Check for updates</button
-											>
-										{:else if row.id === 'available'}
-											<span class="text-xs text-surface-700-300" role="status"
-												>Update 0.2.0</span
-											>
-											<button type="button" class="btn preset-filled-primary-500 btn-sm"
-												>Download installer</button
-											>
-											<button type="button" class="btn preset-tonal-surface btn-sm"
-												>Check for updates</button
-											>
-										{:else if row.id === 'downloading'}
-											<span class="text-xs text-surface-700-300" role="status"
-												>Update 0.2.0</span
-											>
-											<button type="button" class="btn preset-filled-primary-500 btn-sm" disabled
-												>Working…</button
-											>
-											<button type="button" class="btn preset-tonal-surface btn-sm" disabled
-												>Check for updates</button
-											>
-										{:else if row.id === 'up-to-date'}
-											<p class="truncate text-xs text-surface-700-300" role="status">Up to date</p>
-											<button type="button" class="btn preset-tonal-surface btn-sm"
-												>Check for updates</button
-											>
-										{:else if row.id === 'checking'}
-											<button type="button" class="btn preset-tonal-surface btn-sm" disabled
-												>Checking…</button
-											>
-										{:else}
-											<button type="button" class="btn preset-tonal-surface btn-sm"
-												>Check for updates</button
-											>
-										{/if}
+										<UpdateHeaderControls
+											phase={row.id}
+											versionLabel="ver: 0.1.0"
+											latest="0.2.0"
+											errorTitle="Checksum mismatch — update not applied"
+											interactive={false}
+										/>
 									</div>
 								{/each}
 							</div>
+						{:else if desktopBridge}
+							<UpdateHeaderControls
+								phase={settingsUpdatePhase}
+								versionLabel={settingsVersionLabel}
+								latest={updateStatus?.latest || ''}
+								errorTitle={updateApplyError}
+								onCheck={() => void runUpdateCheck()}
+								onDownload={() => void runUpdateApply()}
+							/>
 						{:else}
-							<div class="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1">
-								<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
-									{settingsVersionLabel}
-								</p>
-								{#if updateApplyError}
-									<p
-										class="max-w-[14rem] truncate text-xs text-error-500"
-										role="alert"
-										title={updateApplyError}
-									>
-										{updateApplyError}
-									</p>
-								{:else if settingsUpdateReady}
-									<span class="text-xs text-surface-700-300" role="status">
-										Update {updateStatus?.latest || 'ready'}
-									</span>
-									<button
-										type="button"
-										class="btn preset-filled-primary-500 btn-sm"
-										disabled={updateBusy}
-										onclick={() => void runUpdateApply()}
-									>
-										{updateBusy ? 'Working…' : 'Download installer'}
-									</button>
-								{:else if settingsUpToDate}
-									<p class="truncate text-xs text-surface-700-300" role="status">Up to date</p>
-								{/if}
-								{#if desktopBridge}
-									<button
-										type="button"
-										class="btn preset-tonal-surface btn-sm"
-										disabled={updateBusy}
-										onclick={() => void runUpdateCheck()}
-									>
-										{updateBusy && !settingsUpdateReady ? 'Checking…' : 'Check for updates'}
-									</button>
-								{/if}
-							</div>
+							<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
+								{settingsVersionLabel}
+							</p>
 						{/if}
 					{/snippet}
 					<div class="@container min-w-0 w-full">
