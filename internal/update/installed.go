@@ -3,8 +3,6 @@ package update
 import (
 	"context"
 	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -62,9 +60,8 @@ func applyInstalled(ctx context.Context, app *application.App, out Status) (Stat
 		out.Message = err.Error()
 		return out, err
 	}
-	// Best-effort: installer may still hold the file briefly; startup ClearStaged
-	// sweeps leftovers after the new build is running.
-	_ = os.Remove(dest)
+	// Leave the staged installer on disk; ClearStaged on the next app start removes it.
+	// Deleting here raced with NSIS opening the file after cmd start returns.
 
 	out.Message = "Opened installer " + rel.Version
 	go func() {
@@ -112,11 +109,9 @@ func downloadSetup(ctx context.Context, gh *github.Provider, rel *updater.Releas
 	}
 
 	sum := hasher.Sum(nil)
-	if rel.Verification != nil && len(rel.Verification.Digest) > 0 {
-		if subtle.ConstantTimeCompare(sum, rel.Verification.Digest) != 1 {
-			_ = os.Remove(tmp)
-			return "", fmt.Errorf("updater: checksum mismatch for %s (got %s)", name, hex.EncodeToString(sum))
-		}
+	if err := requireSHA256(rel, sum, name); err != nil {
+		_ = os.Remove(tmp)
+		return "", err
 	}
 
 	_ = os.Remove(dest)

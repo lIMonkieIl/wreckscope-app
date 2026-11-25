@@ -19,6 +19,18 @@ func (a *App) UpdateMode() string {
 	return update.Mode()
 }
 
+func (a *App) storeUpdateStatus(st update.Status) {
+	a.updateMu.Lock()
+	a.lastUpdate = st
+	a.updateMu.Unlock()
+}
+
+func (a *App) loadUpdateStatus() update.Status {
+	a.updateMu.Lock()
+	defer a.updateMu.Unlock()
+	return a.lastUpdate
+}
+
 // CheckForUpdates queries GitHub Releases. Does not download.
 func (a *App) CheckForUpdates() (update.Status, error) {
 	if a.wails == nil {
@@ -28,7 +40,7 @@ func (a *App) CheckForUpdates() (update.Status, error) {
 	defer cancel()
 	st, err := update.Check(ctx, a.wails)
 	if err == nil {
-		a.lastUpdate = st
+		a.storeUpdateStatus(st)
 		a.wails.Event.Emit("update-status", st)
 		if st.Available {
 			a.wails.Event.Emit("update-available", st)
@@ -45,19 +57,20 @@ func (a *App) ApplyUpdate() (update.Status, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 	st, err := update.Apply(ctx, a.wails)
-	if st.Latest == "" && a.lastUpdate.Latest != "" {
-		st.Latest = a.lastUpdate.Latest
+	prev := a.loadUpdateStatus()
+	if st.Latest == "" && prev.Latest != "" {
+		st.Latest = prev.Latest
 		st.Available = true
 	}
 	if err == nil {
-		a.lastUpdate = st
+		a.storeUpdateStatus(st)
 	}
 	return st, err
 }
 
 // LastUpdateStatus returns the most recent check/apply result (may be empty).
 func (a *App) LastUpdateStatus() update.Status {
-	return a.lastUpdate
+	return a.loadUpdateStatus()
 }
 
 func (a *App) quietUpdateCheck() {
@@ -65,7 +78,11 @@ func (a *App) quietUpdateCheck() {
 		return
 	}
 	// Initial check shortly after start, then periodically while running.
-	time.Sleep(4 * time.Second)
+	select {
+	case <-a.ctx.Done():
+		return
+	case <-time.After(4 * time.Second):
+	}
 	a.runQuietCheck()
 	ticker := time.NewTicker(6 * time.Hour)
 	defer ticker.Stop()
@@ -80,7 +97,7 @@ func (a *App) quietUpdateCheck() {
 }
 
 func (a *App) runQuietCheck() {
-	if a.wails == nil {
+	if a.wails == nil || a.ctx == nil || a.ctx.Err() != nil {
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -90,7 +107,10 @@ func (a *App) runQuietCheck() {
 		log.Printf("Quiet update check: %v", err)
 		return
 	}
-	a.lastUpdate = st
+	if a.ctx.Err() != nil {
+		return
+	}
+	a.storeUpdateStatus(st)
 	a.wails.Event.Emit("update-status", st)
 	if st.Available {
 		a.wails.Event.Emit("update-available", st)
