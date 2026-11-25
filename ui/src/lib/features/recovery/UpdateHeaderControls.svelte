@@ -50,7 +50,7 @@
 	{#if phase === 'available'}
 		<button
 			type="button"
-			class="btn preset-filled-primary-500 btn-xs gap-0 overflow-hidden p-0"
+			class="btn preset-filled-success-500 btn-sm gap-0 overflow-hidden p-0"
 			disabled={!interactive}
 			aria-label={`Download ${downloadVersion}`}
 			title={`Download ${downloadVersion}`}
