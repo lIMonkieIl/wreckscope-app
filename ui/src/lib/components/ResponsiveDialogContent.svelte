@@ -6,8 +6,9 @@
 	let {
 		title,
 		width = 'sm:max-w-md',
+		headerEnd,
 		children,
-	}: { title: string; width?: string; children: Snippet } = $props();
+	}: { title: string; width?: string; headerEnd?: Snippet; children: Snippet } = $props();
 
 	let offset = $state(0);
 	let drag: { id: number; y: number } | undefined;
@@ -69,12 +70,17 @@
 			<header
 				class="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-surface-300-700 bg-surface-50-950 px-5 pt-[max(0.25rem,env(safe-area-inset-top))] pb-3 max-sm:-mt-2 sm:pt-4"
 			>
-				<Dialog.Title class="h4">{title}</Dialog.Title>
-				<Dialog.CloseTrigger
-					class="btn-icon preset-ghost hidden sm:inline-flex"
-					aria-label={'Close ' + title.toLowerCase()}
-					><ControlIcon name="close" /></Dialog.CloseTrigger
-				>
+				<Dialog.Title class="h4 min-w-0 truncate">{title}</Dialog.Title>
+				<div class="flex min-w-0 shrink-0 items-center gap-2">
+					{#if headerEnd}
+						<div class="min-w-0 text-right">{@render headerEnd()}</div>
+					{/if}
+					<Dialog.CloseTrigger
+						class="btn-icon preset-ghost hidden sm:inline-flex"
+						aria-label={'Close ' + title.toLowerCase()}
+						><ControlIcon name="close" /></Dialog.CloseTrigger
+					>
+				</div>
 			</header>
 			<div class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 py-4">
 				{@render children()}

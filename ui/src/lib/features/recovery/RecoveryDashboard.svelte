@@ -21,10 +21,9 @@
 	import { onDesktopBridgeChange } from './desktopBridge.ts';
 	import {
 		applyUpdate,
-		checkForUpdates,
 		getAppVersion,
 		lastUpdateStatus,
-		onUpdateAvailable,
+		onUpdateStatus,
 		type UpdateStatus,
 	} from './updates.ts';
 	import { Dialog, Popover, Portal, QrCode } from '@skeletonlabs/skeleton-svelte';
@@ -517,15 +516,20 @@
 		const stopOpenSettings = onOpenSettingsRequest(() => {
 			void editSettings(true);
 		});
-		const stopUpdateNotice = onUpdateAvailable((status) => {
+		const stopUpdateNotice = onUpdateStatus((status) => {
 			updateStatus = status;
+			if (status.current) appVersion = status.current;
+		});
+		void getAppVersion().then((v) => {
+			if (v) appVersion = v;
 		});
 		const loadDesktopExtras = () => {
 			void getAppVersion().then((v) => {
-				appVersion = v;
+				if (v) appVersion = v;
 			});
 			void lastUpdateStatus().then((status) => {
 				if (status.available || status.message) updateStatus = status;
+				if (status.current) appVersion = status.current;
 			});
 		};
 		const stopDesktopBridge = onDesktopBridgeChange((desktop) => {
@@ -836,24 +840,6 @@
 		}
 	}
 
-	async function runUpdateCheck() {
-		if (!desktopBridge || updateBusy) return;
-		updateBusy = true;
-		try {
-			updateStatus = await checkForUpdates();
-		} catch (error) {
-			updateStatus = {
-				current: appVersion,
-				latest: '',
-				available: false,
-				mode: '',
-				message: error instanceof Error ? error.message : String(error),
-			};
-		} finally {
-			updateBusy = false;
-		}
-	}
-
 	async function runUpdateApply() {
 		if (!desktopBridge || updateBusy || !updateStatus?.available) return;
 		updateBusy = true;
@@ -874,6 +860,12 @@
 			updateBusy = false;
 		}
 	}
+
+	let settingsVersionLabel = $derived(`ver: ${appVersion || '…'}`);
+	let settingsUpdateReady = $derived(!!desktopBridge && !!updateStatus?.available);
+	let settingsUpToDate = $derived(
+		!!desktopBridge && !!updateStatus && !updateStatus.available && !!updateStatus.message,
+	);
 	async function showPhone(open: boolean) {
 		phoneOpen = open;
 		if (!open) return;
@@ -944,6 +936,34 @@
 					title={settingsDialogTitle}
 					width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
 				>
+					{#snippet headerEnd()}
+						<div class="flex max-w-[14rem] flex-col items-end gap-1 sm:max-w-xs">
+							<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
+								{settingsVersionLabel}
+							</p>
+							{#if settingsUpdateReady}
+								<div class="flex flex-wrap items-center justify-end gap-1.5">
+									<span class="text-xs text-surface-700-300" role="status">
+										Update {updateStatus?.latest || 'ready'}
+									</span>
+									<button
+										type="button"
+										class="btn preset-filled-primary-500 btn-sm"
+										disabled={updateBusy}
+										onclick={() => void runUpdateApply()}
+									>
+										{updateBusy
+											? 'Working…'
+											: updateStatus?.mode === 'installed'
+												? 'Download installer'
+												: 'Install'}
+									</button>
+								</div>
+							{:else if settingsUpToDate}
+								<p class="truncate text-xs text-surface-700-300" role="status">Up to date</p>
+							{/if}
+						</div>
+					{/snippet}
 					<div class="@container min-w-0 w-full">
 					{#if firstRunSetup}
 						<p class="mb-5 text-sm text-surface-700-300">
@@ -1083,48 +1103,6 @@
 									onMode={(value) => patchSettings({ mode: value })}
 								/>
 							</section>
-
-							{#if desktopBridge}
-								<section
-									class="min-w-0 space-y-3"
-									class:settings-secondary={settingsSecondary}
-								>
-									<header
-										class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
-									>
-										Updates
-									</header>
-									<p class="text-sm text-surface-700-300">
-										Version {appVersion || '…'}{#if updateStatus?.mode}
-											· {updateStatus.mode}{/if}
-									</p>
-									{#if updateStatus?.message}
-										<p role="status" class="text-sm text-surface-700-300">{updateStatus.message}</p>
-									{/if}
-									<div class="flex flex-wrap gap-2">
-										<button
-											type="button"
-											class="btn preset-filled-primary-500"
-											disabled={updateBusy}
-											onclick={() => void runUpdateCheck()}
-										>
-											{updateBusy ? 'Working…' : 'Check for updates'}
-										</button>
-										{#if updateStatus?.available}
-											<button
-												type="button"
-												class="btn preset-tonal"
-												disabled={updateBusy}
-												onclick={() => void runUpdateApply()}
-											>
-												{updateStatus.mode === 'installed'
-													? 'Download installer'
-													: 'Install update'}
-											</button>
-										{/if}
-									</div>
-								</section>
-							{/if}
 
 							<section
 								class="min-w-0 space-y-3"

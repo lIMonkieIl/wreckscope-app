@@ -29,6 +29,7 @@ func (a *App) CheckForUpdates() (update.Status, error) {
 	st, err := update.Check(ctx, a.wails)
 	if err == nil {
 		a.lastUpdate = st
+		a.wails.Event.Emit("update-status", st)
 		if st.Available {
 			a.wails.Event.Emit("update-available", st)
 		}
@@ -64,7 +65,25 @@ func (a *App) quietUpdateCheck() {
 	if a.wails == nil {
 		return
 	}
+	// Initial check shortly after start, then periodically while running.
 	time.Sleep(4 * time.Second)
+	a.runQuietCheck()
+	ticker := time.NewTicker(6 * time.Hour)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		case <-ticker.C:
+			a.runQuietCheck()
+		}
+	}
+}
+
+func (a *App) runQuietCheck() {
+	if a.wails == nil {
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	st, err := update.Check(ctx, a.wails)
@@ -73,6 +92,7 @@ func (a *App) quietUpdateCheck() {
 		return
 	}
 	a.lastUpdate = st
+	a.wails.Event.Emit("update-status", st)
 	if st.Available {
 		a.wails.Event.Emit("update-available", st)
 	}

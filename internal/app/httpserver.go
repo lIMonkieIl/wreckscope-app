@@ -248,6 +248,15 @@ func (a *App) startHTTP(ctx context.Context) {
 		_, _ = io.WriteString(w, "ok")
 	})
 
+	mux.HandleFunc("/api/version", func(w http.ResponseWriter, r *http.Request) {
+		if !a.allowPeer(w, r) {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
+		_ = json.NewEncoder(w).Encode(map[string]string{"version": a.AppVersion()})
+	})
+
 	fileServer := http.FileServer(http.FS(web))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if !a.allowPeer(w, r) {

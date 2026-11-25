@@ -1,4 +1,4 @@
-import { whenDesktopRuntimeReady } from './desktopBridge.ts';
+import { hasDesktopBridge, whenDesktopRuntimeReady } from './desktopBridge.ts';
 
 export type UpdateStatus = {
 	current: string;
@@ -30,14 +30,25 @@ async function loadApp() {
 	return import('../../../../bindings/wreckscope/internal/app/app.js');
 }
 
+/** Baked app version — desktop bindings, or LAN `/api/version` on phone. */
 export async function getAppVersion(): Promise<string> {
-	const app = await loadApp();
-	return (await app.AppVersion()) ?? '';
-}
-
-export async function checkForUpdates(): Promise<UpdateStatus> {
-	const app = await loadApp();
-	return asStatus((await app.CheckForUpdates()) as Record<string, unknown>);
+	if (hasDesktopBridge()) {
+		try {
+			const app = await loadApp();
+			const v = (await app.AppVersion()) ?? '';
+			if (v) return v;
+		} catch {
+			/* fall through to HTTP */
+		}
+	}
+	try {
+		const response = await fetch('/api/version', { cache: 'no-store' });
+		if (!response.ok) return '';
+		const body = (await response.json()) as { version?: string };
+		return typeof body.version === 'string' ? body.version : '';
+	} catch {
+		return '';
+	}
 }
 
 export async function applyUpdate(): Promise<UpdateStatus> {
@@ -50,7 +61,8 @@ export async function lastUpdateStatus(): Promise<UpdateStatus> {
 	return asStatus((await app.LastUpdateStatus()) as Record<string, unknown>);
 }
 
-export function onUpdateAvailable(handler: (status: UpdateStatus) => void) {
+/** Background quiet-check results (up-to-date or available). */
+export function onUpdateStatus(handler: (status: UpdateStatus) => void) {
 	let cancelled = false;
 	let unsubscribe: (() => void) | undefined;
 	(async () => {
@@ -58,9 +70,15 @@ export function onUpdateAvailable(handler: (status: UpdateStatus) => void) {
 			if (!(await whenDesktopRuntimeReady()) || cancelled) return;
 			const { Events } = await import('@wailsio/runtime');
 			if (cancelled) return;
-			unsubscribe = Events.On('update-available', (event) => {
+			const onEvent = (event: { data?: unknown }) => {
 				handler(asStatus(event.data as Record<string, unknown>));
-			});
+			};
+			const stopStatus = Events.On('update-status', onEvent);
+			const stopAvailable = Events.On('update-available', onEvent);
+			unsubscribe = () => {
+				stopStatus?.();
+				stopAvailable?.();
+			};
 		} catch {
 			/* phone / no bridge */
 		}
