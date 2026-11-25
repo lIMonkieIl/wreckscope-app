@@ -6,7 +6,7 @@ Built with [Wails](https://wails.io) (Go + Svelte). Windows installer (default) 
 
 ## Requirements
 
-- Go 1.23+
+- Go 1.27+
 - Node 24 and pnpm 11
 - [Wails CLI v2](https://wails.io/docs/gettingstarted/installation)
 - WebView2 (Windows)
