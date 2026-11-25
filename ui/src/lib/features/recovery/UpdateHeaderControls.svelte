@@ -16,7 +16,6 @@
 		errorTitle = '',
 		onCheck,
 		onDownload,
-		interactive = true,
 	}: {
 		phase?: UpdateHeaderPhase;
 		versionLabel?: string;
@@ -24,7 +23,6 @@
 		errorTitle?: string;
 		onCheck?: () => void;
 		onDownload?: () => void;
-		interactive?: boolean;
 	} = $props();
 
 	let checking = $derived(phase === 'checking');
@@ -51,7 +49,6 @@
 		<button
 			type="button"
 			class="btn preset-filled-success-500 btn-sm gap-0 overflow-hidden p-0"
-			disabled={!interactive}
 			aria-label={`Download ${downloadVersion}`}
 			title={`Download ${downloadVersion}`}
 			onclick={() => onDownload?.()}
@@ -85,7 +82,7 @@
 		<button
 			type="button"
 			class="btn-icon preset-ghost size-7"
-			disabled={!interactive || checking}
+			disabled={checking}
 			aria-label={checking ? 'Checking for updates' : 'Check for updates'}
 			aria-busy={checking || undefined}
 			title={checking ? 'Checking for updates' : 'Check for updates'}

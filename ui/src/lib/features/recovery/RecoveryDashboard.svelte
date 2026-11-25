@@ -57,17 +57,6 @@
 		TelemetrySnapshot,
 	} from './telemetry';
 
-	/** Temporary: stack every Settings-header update look. Flip to false (or remove) when done reviewing. */
-	const UPDATE_HEADER_PREVIEW = true;
-	const UPDATE_HEADER_PREVIEW_PHASES: { id: UpdateHeaderPhase; label: string }[] = [
-		{ id: 'idle', label: 'idle' },
-		{ id: 'checking', label: 'checking' },
-		{ id: 'up-to-date', label: 'up to date' },
-		{ id: 'available', label: 'available' },
-		{ id: 'downloading', label: 'downloading' },
-		{ id: 'error', label: 'error' },
-	];
-
 	type DockDrag = { id: number; start: number; size: number; span: number };
 	const defaults: DetectionSettings = {
 		cautionSeconds: 1,
@@ -1021,29 +1010,7 @@
 					width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
 				>
 					{#snippet headerEnd()}
-						{#if UPDATE_HEADER_PREVIEW}
-							<div class="flex max-w-full flex-col items-stretch gap-2">
-								<p class="text-[10px] uppercase tracking-wide text-surface-600-400">
-									Update UI preview — set UPDATE_HEADER_PREVIEW false in RecoveryDashboard.svelte
-								</p>
-								{#each UPDATE_HEADER_PREVIEW_PHASES as row (row.id)}
-									<div
-										class="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1 rounded border border-dashed border-surface-300-700/50 px-2 py-1"
-									>
-										<span class="mr-auto shrink-0 text-[10px] text-surface-600-400"
-											>{row.label}</span
-										>
-										<UpdateHeaderControls
-											phase={row.id}
-											versionLabel="ver: 0.1.0"
-											latest="0.2.0"
-											errorTitle="Checksum mismatch — update not applied"
-											interactive={false}
-										/>
-									</div>
-								{/each}
-							</div>
-						{:else if desktopBridge}
+						{#if desktopBridge}
 							<UpdateHeaderControls
 								phase={settingsUpdatePhase}
 								versionLabel={settingsVersionLabel}
