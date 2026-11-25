@@ -21,6 +21,7 @@ func (a *App) startHTTP(ctx context.Context) {
 	web, err := fs.Sub(a.assets, "ui/dist")
 	if err != nil {
 		log.Printf("LAN assets: %v", err)
+		a.setHTTPListen(false, "LAN dashboard assets missing")
 		return
 	}
 
@@ -31,9 +32,12 @@ func (a *App) startHTTP(ctx context.Context) {
 	addr := fmt.Sprintf("%s:%d", bindHost, a.httpPort)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
+		msg := "LAN dashboard port " + fmt.Sprintf("%d", a.httpPort) + " busy"
 		log.Printf("LAN dashboard bind failed: %v", err)
+		a.setHTTPListen(false, msg)
 		return
 	}
+	a.setHTTPListen(true, "")
 
 	mux := http.NewServeMux()
 	var streamMu sync.Mutex
@@ -245,6 +249,9 @@ func (a *App) startHTTP(ctx context.Context) {
 	})
 
 	mux.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+		if !a.allowPeer(w, r) {
+			return
+		}
 		_, _ = io.WriteString(w, "ok")
 	})
 

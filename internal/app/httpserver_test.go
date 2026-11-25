@@ -99,6 +99,9 @@ func TestLANHTTPInteractive(t *testing.T) {
 	if access["readOnly"] != false {
 		t.Fatalf("readOnly=%v want false", access["readOnly"])
 	}
+	if access["listening"] != true {
+		t.Fatalf("listening=%v want true", access["listening"])
+	}
 
 	resp, err = http.Get(base + "/api/settings")
 	if err != nil {
@@ -173,5 +176,22 @@ func TestLANHTTPInteractive(t *testing.T) {
 	case <-done:
 	case <-time.After(3 * time.Second):
 		t.Fatal("server did not shut down")
+	}
+}
+
+func TestPhoneAccessWithoutListen(t *testing.T) {
+	app := New(lanTestAssets)
+	app.lan = true
+	app.setHTTPListen(false, "LAN dashboard port 8080 busy")
+	access := app.PhoneAccess()
+	if access["listening"] != false {
+		t.Fatalf("listening=%v", access["listening"])
+	}
+	urls, _ := access["urls"].([]string)
+	if len(urls) != 0 {
+		t.Fatalf("urls should be empty when not listening: %v", urls)
+	}
+	if access["error"] != "LAN dashboard port 8080 busy" {
+		t.Fatalf("error=%v", access["error"])
 	}
 }

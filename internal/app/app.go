@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -38,6 +39,13 @@ type App struct {
 	cancel     context.CancelFunc
 	wg         sync.WaitGroup
 
+	listenMu   sync.Mutex
+	httpReady  bool
+	udpReady   bool
+	httpBindErr string
+	udpBindErr  string
+
+	updateMu   sync.Mutex
 	lastUpdate update.Status
 }
 
@@ -120,13 +128,55 @@ func (a *App) notify() {
 	}
 }
 
+func (a *App) setUDPListen(ok bool, errMsg string) {
+	a.listenMu.Lock()
+	a.udpReady = ok
+	a.udpBindErr = errMsg
+	a.listenMu.Unlock()
+	a.refreshBindMessage()
+}
+
+func (a *App) setHTTPListen(ok bool, errMsg string) {
+	a.listenMu.Lock()
+	a.httpReady = ok
+	a.httpBindErr = errMsg
+	a.listenMu.Unlock()
+	a.refreshBindMessage()
+}
+
+func (a *App) httpListening() bool {
+	a.listenMu.Lock()
+	defer a.listenMu.Unlock()
+	return a.httpReady
+}
+
+func (a *App) refreshBindMessage() {
+	a.listenMu.Lock()
+	udpErr, httpErr := a.udpBindErr, a.httpBindErr
+	a.listenMu.Unlock()
+	switch {
+	case udpErr != "" && httpErr != "":
+		a.engine.SetMessage(udpErr + " · " + httpErr)
+	case udpErr != "":
+		a.engine.SetMessage(udpErr)
+	case httpErr != "":
+		a.engine.SetMessage(httpErr)
+	default:
+		a.engine.SetMessage("")
+	}
+	a.notify()
+}
+
 func (a *App) listenUDP(ctx context.Context) {
 	sock, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: a.udpPort})
 	if err != nil {
+		msg := "UDP " + strconv.Itoa(a.udpPort) + " in use — close the other recovery tool"
 		log.Printf("UDP bind failed: %v", err)
+		a.setUDPListen(false, msg)
 		return
 	}
 	defer sock.Close()
+	a.setUDPListen(true, "")
 	log.Printf("UDP listening 127.0.0.1:%d", a.udpPort)
 	_ = sock.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
 	buf := make([]byte, 65535)
@@ -291,15 +341,31 @@ func (a *App) emitSettings(settings racefeed.Settings) {
 }
 
 // PhoneAccess: LAN phone URLs for the Device view QR. Full app, not view-only.
+// URLs are only returned when the LAN HTTP server is actually listening.
 func (a *App) PhoneAccess() map[string]interface{} {
 	addresses := []string{}
-	if a.lan {
+	listening := a.lan && a.httpListening()
+	if listening {
 		if address := setup.PhoneURL(a.httpPort); address != "" {
 			addresses = append(addresses, address)
 		}
 	}
-	return map[string]interface{}{"lan": a.lan, "urls": addresses, "readOnly": false}
+	out := map[string]interface{}{"lan": a.lan, "urls": addresses, "readOnly": false, "listening": listening}
+	a.listenMu.Lock()
+	httpErr := a.httpBindErr
+	a.listenMu.Unlock()
+	if a.lan && !listening {
+		if httpErr != "" {
+			out["error"] = httpErr
+		} else {
+			out["error"] = "LAN dashboard is not listening"
+		}
+	} else if listening && len(addresses) == 0 {
+		out["error"] = "No primary private IPv4 address found."
+	}
+	return out
 }
+
 
 func (a *App) TelemetryStatus() map[string]interface{} {
 	return a.ProbeTelemetry()
