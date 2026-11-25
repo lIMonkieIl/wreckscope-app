@@ -1,0 +1,13 @@
+build/bin
+node_modules
+ui/dist
+ui/node_modules
+ui/.svelte-kit
+ui/.vscode
+*.exe
+*.syso
+settings.json
+.DS_Store
+Thumbs.db
+
+ui/package.json.md5
