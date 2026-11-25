@@ -93,3 +93,26 @@ export function onUpdateStatus(handler: (status: UpdateStatus) => void) {
 		unsubscribe?.();
 	};
 }
+
+/** True while a manual or quiet update check is in flight. */
+export function onUpdateChecking(handler: (checking: boolean) => void) {
+	let cancelled = false;
+	let unsubscribe: (() => void) | undefined;
+	(async () => {
+		try {
+			if (!(await whenDesktopRuntimeReady()) || cancelled) return;
+			const { Events } = await import('@wailsio/runtime');
+			if (cancelled) return;
+			unsubscribe = Events.On('update-checking', (event: { data?: unknown }) => {
+				const raw = Array.isArray(event.data) ? event.data[0] : event.data;
+				handler(raw === true || raw === 'true');
+			});
+		} catch {
+			/* phone / no bridge */
+		}
+	})();
+	return () => {
+		cancelled = true;
+		unsubscribe?.();
+	};
+}

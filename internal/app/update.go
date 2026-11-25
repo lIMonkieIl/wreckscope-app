@@ -31,11 +31,19 @@ func (a *App) loadUpdateStatus() update.Status {
 	return a.lastUpdate
 }
 
+func (a *App) emitUpdateChecking(active bool) {
+	if a.wails == nil {
+		return
+	}
+	a.wails.Event.Emit("update-checking", active)
+}
+
 // CheckForUpdates queries GitHub Releases. Does not download.
 func (a *App) CheckForUpdates() (update.Status, error) {
 	if a.wails == nil {
 		return update.Status{Current: version.Version, Message: "app not ready"}, errNoAppContext
 	}
+	a.emitUpdateChecking(true)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	st, err := update.Check(ctx, a.wails)
@@ -45,6 +53,8 @@ func (a *App) CheckForUpdates() (update.Status, error) {
 		if st.Available {
 			a.wails.Event.Emit("update-available", st)
 		}
+	} else {
+		a.emitUpdateChecking(false)
 	}
 	return st, err
 }
@@ -100,14 +110,17 @@ func (a *App) runQuietCheck() {
 	if a.wails == nil || a.ctx == nil || a.ctx.Err() != nil {
 		return
 	}
+	a.emitUpdateChecking(true)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	st, err := update.Check(ctx, a.wails)
 	if err != nil {
 		log.Printf("Quiet update check: %v", err)
+		a.emitUpdateChecking(false)
 		return
 	}
 	if a.ctx.Err() != nil {
+		a.emitUpdateChecking(false)
 		return
 	}
 	a.storeUpdateStatus(st)

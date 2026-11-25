@@ -24,6 +24,7 @@
 		checkForUpdates,
 		getAppVersion,
 		lastUpdateStatus,
+		onUpdateChecking,
 		onUpdateStatus,
 		type UpdateStatus,
 	} from './updates.ts';
@@ -212,6 +213,7 @@
 	let appVersion = $state('');
 	let updateStatus = $state<UpdateStatus | null>(null);
 	let updateBusy = $state(false);
+	let updateChecking = $state(false);
 	let updateApplyError = $state('');
 	/** Optimistic live/demo until the stream confirms. */
 	let awaitedFeedMode: 'live' | 'demo' | null = null;
@@ -539,9 +541,13 @@
 			void editSettings(true);
 		});
 		const stopUpdateNotice = onUpdateStatus((status) => {
+			updateChecking = false;
 			updateStatus = status;
 			updateApplyError = '';
 			if (status.current) appVersion = status.current;
+		});
+		const stopUpdateChecking = onUpdateChecking((checking) => {
+			updateChecking = checking;
 		});
 		void getAppVersion().then((v) => {
 			if (v) appVersion = v;
@@ -567,6 +573,7 @@
 			colorScheme.removeEventListener('change', syncColorScheme);
 			stopOpenSettings();
 			stopUpdateNotice();
+			stopUpdateChecking();
 			stopDesktopBridge();
 			unsubscribe();
 			map?.destroy();
@@ -929,7 +936,7 @@
 	let settingsUpdatePhase = $derived.by((): UpdateHeaderPhase => {
 		if (!desktopBridge) return 'idle';
 		if (updateBusy && settingsUpdateReady) return 'downloading';
-		if (updateBusy) return 'checking';
+		if (updateBusy || updateChecking) return 'checking';
 		if (updateApplyError) return 'error';
 		if (settingsUpdateReady) return 'available';
 		if (settingsUpToDate) return 'up-to-date';

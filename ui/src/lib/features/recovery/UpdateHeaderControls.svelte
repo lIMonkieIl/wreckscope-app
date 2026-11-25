@@ -27,7 +27,8 @@
 		interactive?: boolean;
 	} = $props();
 
-	let busy = $derived(phase === 'checking' || phase === 'downloading');
+	let checking = $derived(phase === 'checking');
+	let downloading = $derived(phase === 'downloading');
 	let versionClass = $derived(
 		phase === 'error'
 			? 'text-error-500'
@@ -55,11 +56,11 @@
 			Download {latest || 'update'}
 		</button>
 	{/if}
-	{#if busy}
+	{#if downloading}
 		<span
 			class="inline-flex size-7 items-center justify-center"
 			role="status"
-			aria-label={phase === 'downloading' ? 'Downloading update' : 'Checking for updates'}
+			aria-label="Downloading update"
 		>
 			<svg class="size-4 animate-spin text-surface-700-300" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 				<circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" />
@@ -76,12 +77,15 @@
 		<button
 			type="button"
 			class="btn-icon preset-ghost size-7"
-			disabled={!interactive}
-			aria-label="Check for updates"
-			title="Check for updates"
+			disabled={!interactive || checking}
+			aria-label={checking ? 'Checking for updates' : 'Check for updates'}
+			aria-busy={checking || undefined}
+			title={checking ? 'Checking for updates' : 'Check for updates'}
 			onclick={() => onCheck?.()}
 		>
-			<ControlIcon name="update" />
+			<span class="inline-flex" class:animate-spin={checking}>
+				<ControlIcon name="update" />
+			</span>
 		</button>
 	{/if}
 	<p class="truncate text-xs {versionClass}" role={phase === 'error' ? 'alert' : 'status'} title={versionTitle}>
