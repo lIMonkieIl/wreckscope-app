@@ -21,6 +21,7 @@
 	import { onDesktopBridgeChange } from './desktopBridge.ts';
 	import {
 		applyUpdate,
+		checkForUpdates,
 		getAppVersion,
 		lastUpdateStatus,
 		onUpdateStatus,
@@ -366,15 +367,17 @@
 		['Flags', flags],
 	]);
 	let mapStatus = $derived(
-		snapshot.connection === 'live'
-			? ['Game connected', 'Waiting for live car positions. Enter a race to see cars.']
-			: snapshot.connection === 'stale'
-				? ['Telemetry stopped', 'Check that the game is still running.']
-				: snapshot.connection === 'offline'
-					? ['Dashboard disconnected', 'Waiting to reconnect to WreckScope.']
-					: snapshot.mode === 'demo'
-						? ['Starting demo', 'Waiting for simulated cars.']
-						: ['Waiting for Wreckfest 2', 'Start the game and enter a race.'],
+		snapshot.message
+			? [snapshot.message, 'Restart WreckScope after freeing the port.']
+			: snapshot.connection === 'live'
+				? ['Game connected', 'Waiting for live car positions. Enter a race to see cars.']
+				: snapshot.connection === 'stale'
+					? ['Telemetry stopped', 'Check that the game is still running.']
+					: snapshot.connection === 'offline'
+						? ['Dashboard disconnected', 'Waiting to reconnect to WreckScope.']
+						: snapshot.mode === 'demo'
+							? ['Starting demo', 'Waiting for simulated cars.']
+							: ['Waiting for Wreckfest 2', 'Start the game and enter a race.'],
 	);
 
 	type IncidentRecord = {
@@ -534,10 +537,14 @@
 			void getAppVersion().then((v) => {
 				if (v) appVersion = v;
 			});
-			void lastUpdateStatus().then((status) => {
-				if (status.available || status.message) updateStatus = status;
-				if (status.current) appVersion = status.current;
-			});
+			void lastUpdateStatus()
+				.then((status) => {
+					if (status.available || status.message) updateStatus = status;
+					if (status.current) appVersion = status.current;
+				})
+				.catch(() => {
+					/* bridge not ready yet */
+				});
 		};
 		const stopDesktopBridge = onDesktopBridgeChange((desktop) => {
 			desktopBridge = desktop;
@@ -675,13 +682,15 @@
 	$effect(() => {
 		if (!desktopBridge || !streamReady) return;
 		const needsSettings = setupIncomplete || configNeedsAttention;
+		// Only probe when auto-opening Settings. Re-probing on every reactive flip
+		// wiped Browse/Find paths before Configure (ProbeTelemetry ignores unsaved picks).
 		if (needsSettings && !settingsOpen) {
 			settingsOpen = true;
 			queueMicrotask(() => {
 				configSectionEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 			});
+			void loadConfigSection();
 		}
-		void loadConfigSection();
 	});
 	let appearanceChanged = $derived(
 		(liveSettings.theme || defaults.theme) !== defaults.theme ||
@@ -847,6 +856,31 @@
 		}
 	}
 
+	async function runUpdateCheck() {
+		if (!desktopBridge || updateBusy) return;
+		updateBusy = true;
+		updateApplyError = '';
+		try {
+			updateStatus = await checkForUpdates();
+			if (updateStatus.current) appVersion = updateStatus.current;
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			updateApplyError = message;
+			updateStatus = {
+				...(updateStatus ?? {
+					current: appVersion,
+					latest: '',
+					available: false,
+					mode: 'installed',
+					message: '',
+				}),
+				message,
+			};
+		} finally {
+			updateBusy = false;
+		}
+	}
+
 	async function runUpdateApply() {
 		if (!desktopBridge || updateBusy || !updateStatus?.available) return;
 		updateBusy = true;
@@ -890,12 +924,18 @@
 		qrStatus = 'Loading…';
 		try {
 			const access = await getPhoneAccess();
+			if (access.listening === false) {
+				qrStatus = access.error || 'LAN dashboard is not listening';
+				return;
+			}
 			const address = access.urls?.[0];
 			if (address) {
 				qrURL = new URL(address).origin;
 				return;
 			}
-			qrStatus = access.lan ? 'No primary private IPv4 address found.' : 'Phone access is off.';
+			qrStatus = access.lan
+				? access.error || 'No primary private IPv4 address found.'
+				: 'Phone access is off.';
 		} catch {
 			qrStatus = 'Could not load the phone link.';
 		}
@@ -912,34 +952,36 @@
 			</div>
 		</div>
 		<div class="header-controls">
-			<Dialog
-				preventScroll
-				closeOnInteractOutside
-				open={phoneOpen}
-				onOpenChange={({ open }) => showPhone(open)}
-			>
-				<Dialog.Trigger
-					class="btn-icon preset-ghost"
-					aria-label="Device view"
-					title="Device view"><ControlIcon name="device" /></Dialog.Trigger
+			{#if desktopBridge}
+				<Dialog
+					preventScroll
+					closeOnInteractOutside
+					open={phoneOpen}
+					onOpenChange={({ open }) => showPhone(open)}
 				>
-				<ResponsiveDialogContent title="Device view" width="sm:max-w-sm">
-					{#if qrURL}
-						<div class="grid justify-items-center gap-3">
-							<QrCode value={qrURL} encoding={{ ecc: 'H' }} class="grid w-full place-items-center">
-								<QrCode.Frame class="device-qr" aria-label="Phone dashboard QR code">
-									<QrCode.Pattern fill="#090909" />
-								</QrCode.Frame>
-								<QrCode.Overlay
-									class="grid size-8 place-items-center rounded-full border-2 border-white bg-surface-950"
-								>
-									<BrandMark size={22} />
-								</QrCode.Overlay>
-							</QrCode>
-						</div>
-					{:else}<p role="status">{qrStatus}</p>{/if}
-				</ResponsiveDialogContent>
-			</Dialog>
+					<Dialog.Trigger
+						class="btn-icon preset-ghost"
+						aria-label="Device view"
+						title="Device view"><ControlIcon name="device" /></Dialog.Trigger
+					>
+					<ResponsiveDialogContent title="Device view" width="sm:max-w-sm">
+						{#if qrURL}
+							<div class="grid justify-items-center gap-3">
+								<QrCode value={qrURL} encoding={{ ecc: 'H' }} class="grid w-full place-items-center">
+									<QrCode.Frame class="device-qr" aria-label="Phone dashboard QR code">
+										<QrCode.Pattern fill="#090909" />
+									</QrCode.Frame>
+									<QrCode.Overlay
+										class="grid size-8 place-items-center rounded-full border-2 border-white bg-surface-950"
+									>
+										<BrandMark size={22} />
+									</QrCode.Overlay>
+								</QrCode>
+							</div>
+						{:else}<p role="status">{qrStatus}</p>{/if}
+					</ResponsiveDialogContent>
+				</Dialog>
+			{/if}
 			<Dialog
 				preventScroll
 				closeOnInteractOutside
@@ -976,6 +1018,16 @@
 								</button>
 							{:else if settingsUpToDate}
 								<p class="truncate text-xs text-surface-700-300" role="status">Up to date</p>
+							{/if}
+							{#if desktopBridge}
+								<button
+									type="button"
+									class="btn preset-tonal-surface btn-sm"
+									disabled={updateBusy}
+									onclick={() => void runUpdateCheck()}
+								>
+									{updateBusy && !settingsUpdateReady ? 'Checking…' : 'Check for updates'}
+								</button>
 							{/if}
 						</div>
 					{/snippet}

@@ -178,10 +178,15 @@ export interface TelemetrySnapshot {
 	race?: RaceDetails;
 	player?: PlayerTelemetry;
 	participantVisibility?: number;
+	/** Bind / status line from the host (UDP/HTTP failures). */
+	message?: string;
 }
 
 export interface PhoneAccess {
 	lan: boolean;
 	urls: string[];
 	readOnly?: boolean;
+	/** True only when the LAN HTTP server bound successfully. */
+	listening?: boolean;
+	error?: string;
 }

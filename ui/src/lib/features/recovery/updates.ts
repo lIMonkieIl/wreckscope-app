@@ -53,12 +53,17 @@ export async function getAppVersion(): Promise<string> {
 
 export async function applyUpdate(): Promise<UpdateStatus> {
 	const app = await loadApp();
-	return asStatus((await app.ApplyUpdate()) as Record<string, unknown>);
+	return asStatus((await app.ApplyUpdate()) as unknown as Record<string, unknown>);
 }
 
 export async function lastUpdateStatus(): Promise<UpdateStatus> {
 	const app = await loadApp();
-	return asStatus((await app.LastUpdateStatus()) as Record<string, unknown>);
+	return asStatus((await app.LastUpdateStatus()) as unknown as Record<string, unknown>);
+}
+
+export async function checkForUpdates(): Promise<UpdateStatus> {
+	const app = await loadApp();
+	return asStatus((await app.CheckForUpdates()) as unknown as Record<string, unknown>);
 }
 
 /** Background quiet-check results (up-to-date or available). */
