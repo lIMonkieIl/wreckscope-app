@@ -13,7 +13,7 @@ import (
 
 type Car = detector.Car
 
-// Settings: UI + detection, persisted beside the exe.
+// Settings: UI + detection (AppData when installed; beside exe when portable).
 // TelemetryConfigPath is the game config.json path (game file stays separate).
 // SetupCompleted is first-run only, not "telemetry already enabled".
 type Settings struct {

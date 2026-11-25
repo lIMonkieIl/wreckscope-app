@@ -8,19 +8,55 @@ import (
 	"wreckscope/internal/racefeed"
 )
 
-// PathOverride is for tests; empty means use the exe directory.
+const (
+	fileName        = "settings.json"
+	portableMarker  = "portable"
+	appDataFolder   = "WreckScope"
+)
+
+// PathOverride is for tests.
 var PathOverride string
 
-// Path: settings.json beside the exe.
+// Test hooks (nil = real OS).
+var (
+	lookupExe        = os.Executable
+	lookupUserConfig = os.UserConfigDir
+)
+
+// Path returns settings.json for this install mode.
+// Portable (marker file beside the exe): next to the exe.
+// Installed / default: %AppData%\WreckScope\settings.json.
 func Path() (string, error) {
 	if PathOverride != "" {
 		return PathOverride, nil
 	}
-	exe, err := os.Executable()
+	exe, err := lookupExe()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(filepath.Dir(exe), "settings.json"), nil
+	exeDir := filepath.Dir(exe)
+	if Portable(exeDir) {
+		return filepath.Join(exeDir, fileName), nil
+	}
+	dir, err := dataDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, fileName), nil
+}
+
+// Portable is true when exeDir contains the portable marker file.
+func Portable(exeDir string) bool {
+	_, err := os.Stat(filepath.Join(exeDir, portableMarker))
+	return err == nil
+}
+
+func dataDir() (string, error) {
+	root, err := lookupUserConfig()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(root, appDataFolder), nil
 }
 
 func Load(path string) (racefeed.Settings, error) {

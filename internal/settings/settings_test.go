@@ -9,21 +9,60 @@ import (
 	"wreckscope/internal/racefeed"
 )
 
-func TestPathBesideExe(t *testing.T) {
+func TestPathInstalledUsesAppData(t *testing.T) {
 	PathOverride = ""
+	exeDir := t.TempDir()
+	configDir := t.TempDir()
+	lookupExe = func() (string, error) {
+		return filepath.Join(exeDir, "WreckScope.exe"), nil
+	}
+	lookupUserConfig = func() (string, error) { return configDir, nil }
+	t.Cleanup(func() {
+		lookupExe = os.Executable
+		lookupUserConfig = os.UserConfigDir
+	})
+
 	path, err := Path()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if filepath.Base(path) != "settings.json" {
-		t.Fatalf("base=%s", filepath.Base(path))
+	want := filepath.Join(configDir, appDataFolder, fileName)
+	if path != want {
+		t.Fatalf("path=%q want %q", path, want)
 	}
-	exe, err := os.Executable()
+	if Portable(exeDir) {
+		t.Fatal("expected non-portable")
+	}
+}
+
+func TestPathPortableBesideExe(t *testing.T) {
+	PathOverride = ""
+	exeDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(exeDir, portableMarker), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	lookupExe = func() (string, error) {
+		return filepath.Join(exeDir, "WreckScope.exe"), nil
+	}
+	lookupUserConfig = func() (string, error) {
+		t.Fatal("UserConfigDir should not be used in portable mode")
+		return "", nil
+	}
+	t.Cleanup(func() {
+		lookupExe = os.Executable
+		lookupUserConfig = os.UserConfigDir
+	})
+
+	path, err := Path()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if filepath.Dir(path) != filepath.Dir(exe) {
-		t.Fatalf("settings dir %q != exe dir %q", filepath.Dir(path), filepath.Dir(exe))
+	want := filepath.Join(exeDir, fileName)
+	if path != want {
+		t.Fatalf("path=%q want %q", path, want)
+	}
+	if !Portable(exeDir) {
+		t.Fatal("expected portable")
 	}
 }
 
