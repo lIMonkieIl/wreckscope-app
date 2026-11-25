@@ -62,6 +62,7 @@ Copy-Item $exe (Join-Path $stage "WreckScope.exe")
 $portableSettings = @'
 {
   "portable": true,
+  "setupCompleted": false,
   "theme": "wreckscope",
   "mode": "system",
   "view": "recovery",
