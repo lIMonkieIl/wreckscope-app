@@ -20,7 +20,7 @@ func TestClearStagedRemovesFilesKeepsDir(t *testing.T) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"WreckScope-0.1.3-windows-amd64-setup.exe", "foo.partial"} {
+	for _, name := range []string{"WreckScope-0.1.0-windows-amd64-setup.exe", "foo.partial"} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte("x"), 0o600); err != nil {
 			t.Fatal(err)
 		}

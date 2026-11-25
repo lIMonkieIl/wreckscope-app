@@ -59,7 +59,7 @@ Publish both on a GitHub Release. In-app updates download the setup package to `
 Binary-only (no installer):
 
 ```powershell
-wails3 task build VERSION=0.1.3
+wails3 task build VERSION=0.1.0
 ```
 
 Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`) and stamped into Windows `info.json` / NSIS `DisplayVersion` by `scripts/stamp-windows-version.ps1` (single source: `build/config.yml` `info.version` unless `-Version` is passed).
