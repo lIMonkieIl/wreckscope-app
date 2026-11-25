@@ -197,6 +197,13 @@ func (e *Engine) Settings() Settings {
 	return e.settings
 }
 
+// SetMessage stores a dashboard status line (bind failures, etc.).
+func (e *Engine) SetMessage(msg string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.message = msg
+}
+
 func (e *Engine) UpdateMotion(slot int, x, y, z, speed float64) {
 	e.detector.UpdateMotion(e.clock(), slot, x, y, z, speed)
 }
@@ -218,12 +225,13 @@ func (e *Engine) UpdateOrientation(slot int, x, y, z, w float64) {
 	e.detector.UpdateOrientation(e.clock(), slot, x, y, z, w)
 }
 
+// UpdateInfo takes e.mu before the detector lock — same order as Snapshot/SetMode/MarkPacket.
 func (e *Engine) UpdateInfo(slot int, name, carID, carName string, bot bool) {
-	e.detector.UpdateInfo(slot, name, carID, bot)
 	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.detector.UpdateInfo(slot, name, carID, bot)
 	row := &e.standings[slot]
 	row.Name, row.CarID, row.CarName, row.bot = name, carID, carName, bot
-	e.mu.Unlock()
 }
 
 func (e *Engine) UpdateLocalDriver(slot int, name string) {
