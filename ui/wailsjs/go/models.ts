@@ -513,6 +513,7 @@ export namespace racefeed {
 	    view: string;
 	    telemetryConfigPath?: string;
 	    setupCompleted: boolean;
+	    portable?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new Settings(source);
@@ -532,6 +533,7 @@ export namespace racefeed {
 	        this.view = source["view"];
 	        this.telemetryConfigPath = source["telemetryConfigPath"];
 	        this.setupCompleted = source["setupCompleted"];
+	        this.portable = source["portable"];
 	    }
 	}
 	export class Standing {

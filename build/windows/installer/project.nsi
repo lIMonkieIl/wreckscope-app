@@ -30,6 +30,9 @@ Unicode true
 ####
 ## !define REQUEST_EXECUTION_LEVEL "admin"            # Default "admin"  see also https://nsis.sourceforge.io/Docs/Chapter4.html
 ####
+# Match wails.json outputfilename / portable zip exe name (not lowercase project name).
+!define PRODUCT_EXECUTABLE "WreckScope.exe"
+####
 ## Include the wails tools
 ####
 !include "wails_tools.nsh"
@@ -150,7 +153,8 @@ SectionEnd
 Section "uninstall"
     !insertmacro wails.setShellContext
 
-    RMDir /r "$AppData\${PRODUCT_EXECUTABLE}"
+    # Settings live in %AppData%\WreckScope\ (INFO_PRODUCTNAME), not beside the exe name.
+    RMDir /r "$AppData\${INFO_PRODUCTNAME}"
 
     RMDir /r $INSTDIR
 
