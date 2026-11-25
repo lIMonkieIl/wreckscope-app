@@ -47,9 +47,69 @@ jobs:
         shell: bash
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
 
+      # Chocolatey community feed has been 504ing; verify makensis and fall back to the official installer.
       - name: Install NSIS
-        shell: bash
-        run: choco install nsis -y --no-progress
+        shell: pwsh
+        run: |
+          function Find-MakeNsis {
+            $cmd = Get-Command makensis -ErrorAction SilentlyContinue
+            if ($cmd) { return $cmd.Source }
+            foreach ($path in @(
+              "${env:ProgramFiles(x86)}\NSIS\makensis.exe",
+              "${env:ProgramFiles}\NSIS\makensis.exe"
+            )) {
+              if (Test-Path $path) { return $path }
+            }
+            return $null
+          }
+
+          $found = Find-MakeNsis
+          if ($found) {
+            Write-Host "NSIS already present: $found"
+          } else {
+            $installed = $false
+            for ($i = 1; $i -le 3; $i++) {
+              Write-Host "Chocolatey NSIS attempt $i/3..."
+              & choco install nsis -y --no-progress
+              $found = Find-MakeNsis
+              if ($found) { $installed = $true; break }
+              Start-Sleep -Seconds 12
+            }
+
+            if (-not $installed) {
+              Write-Host "Chocolatey did not provide makensis; downloading NSIS setup..."
+              $ver = "3.10"
+              $installer = Join-Path $env:RUNNER_TEMP "nsis-$ver-setup.exe"
+              $urls = @(
+                "https://downloads.sourceforge.net/project/nsis/NSIS%203/$ver/nsis-$ver-setup.exe",
+                "https://sourceforge.net/projects/nsis/files/NSIS%203/$ver/nsis-$ver-setup.exe/download"
+              )
+              $downloaded = $false
+              foreach ($url in $urls) {
+                try {
+                  Write-Host "GET $url"
+                  Invoke-WebRequest -Uri $url -OutFile $installer -UserAgent "Wget/1.21" -MaximumRedirection 8
+                  if ((Test-Path $installer) -and ((Get-Item $installer).Length -gt 1MB)) {
+                    $downloaded = $true
+                    break
+                  }
+                } catch {
+                  Write-Host "Download failed: $_"
+                }
+              }
+              if (-not $downloaded) {
+                throw "Failed to download NSIS installer (Chocolatey and SourceForge both unavailable)."
+              }
+              Start-Process -FilePath $installer -ArgumentList "/S" -Wait
+              $found = Find-MakeNsis
+            }
+          }
+
+          if (-not $found) {
+            throw "makensis not found after NSIS install."
+          }
+          Write-Host "makensis: $found"
+          & $found /VERSION
 
       - name: Add tools to PATH
         shell: pwsh
