@@ -138,6 +138,8 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          # Packaging stamps version metadata and regenerates Wails bindings,
+          # which leaves the tree dirty; skip git validation for this upload-only release.
+          args: release --clean --skip=validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
