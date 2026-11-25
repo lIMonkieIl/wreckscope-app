@@ -41,13 +41,15 @@ func TestServiceStartupSeedsBrandDefaults(t *testing.T) {
 	}
 }
 
-func TestServiceStartupKeepsExistingAppearance(t *testing.T) {
+func TestServiceStartupKeepsCompletedAppearance(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "settings.json")
 	settings.PathOverride = path
 	t.Cleanup(func() { settings.PathOverride = "" })
 
-	if err := settings.Save(path, racefeed.Settings{Theme: "pine", Mode: "light", SpeedUnit: "km/h"}); err != nil {
+	if err := settings.Save(path, racefeed.Settings{
+		Theme: "pine", Mode: "light", SpeedUnit: "km/h", SetupCompleted: true,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -61,7 +63,40 @@ func TestServiceStartupKeepsExistingAppearance(t *testing.T) {
 
 	got := app.GetSettings()
 	if got.Theme != "pine" || got.Mode != "light" {
-		t.Fatalf("upgrade must keep saved appearance %+v", got)
+		t.Fatalf("completed setup must keep saved appearance %+v", got)
+	}
+}
+
+func TestServiceStartupResetsIncompleteAppearance(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "settings.json")
+	settings.PathOverride = path
+	t.Cleanup(func() { settings.PathOverride = "" })
+
+	if err := settings.Save(path, racefeed.Settings{
+		Theme: "pine", Mode: "light", SpeedUnit: "km/h", SetupCompleted: false,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	app := New(embed.FS{})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := app.ServiceStartup(ctx, wailsapp.ServiceOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = app.ServiceShutdown() })
+
+	got := app.GetSettings()
+	if got.Theme != "wreckscope" || got.Mode != "system" {
+		t.Fatalf("incomplete first-run must reset appearance %+v", got)
+	}
+	disk, err := settings.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if disk.Theme != "wreckscope" || disk.Mode != "system" {
+		t.Fatalf("disk appearance %+v", disk)
 	}
 }
 

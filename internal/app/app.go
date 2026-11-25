@@ -71,6 +71,17 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 		log.Printf("Find settings file: %v", err)
 	} else if saved, err := settings.Load(path); err == nil {
 		_, _ = a.engine.ApplySettings(saved, nil)
+		// Incomplete first-run: keep brand appearance so leftover AppData smoke
+		// themes (e.g. pine/light) cannot masquerade as product defaults.
+		if !saved.SetupCompleted {
+			cur := a.engine.Settings()
+			if cur.Theme != "wreckscope" || cur.Mode != "system" {
+				cur.Theme, cur.Mode = "wreckscope", "system"
+				if _, err := a.persistSettings(cur); err != nil {
+					log.Printf("Reset first-run appearance: %v", err)
+				}
+			}
+		}
 	} else if os.IsNotExist(err) {
 		// First run: seed AppData with brand defaults (wreckscope + system).
 		if saveErr := settings.Save(path, a.engine.Settings()); saveErr != nil {

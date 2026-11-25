@@ -22,6 +22,8 @@ pnpm --dir ui install
 wails3 task dev
 ```
 
+Dev reuses `%AppData%\WreckScope\` (settings + WebView). Delete that folder — or at least `settings.json` — for a true first-run.
+
 Alternate (no watcher): start Vite in one terminal, then build/run in another:
 
 ```powershell
