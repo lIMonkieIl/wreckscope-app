@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"wreckscope/internal/app"
+	"wreckscope/internal/update"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -15,7 +16,8 @@ var assets embed.FS
 func main() {
 	service := app.New(assets)
 
-	wailsApp := application.New(application.Options{
+	var wailsApp *application.App
+	wailsApp = application.New(application.Options{
 		Name:        "WreckScope",
 		Description: "WreckScope dashboard",
 		Services: []application.Service{
@@ -24,10 +26,20 @@ func main() {
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
 		},
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID: "com.wreckscope.app",
+			OnSecondInstanceLaunch: func(_ application.SecondInstanceData) {
+				focusMainWindow(wailsApp)
+			},
+		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
+
+	if err := update.Configure(wailsApp); err != nil {
+		log.Printf("Updater: %v", err)
+	}
 
 	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:            "WreckScope",
@@ -40,4 +52,23 @@ func main() {
 	if err := wailsApp.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func focusMainWindow(wailsApp *application.App) {
+	if wailsApp == nil {
+		return
+	}
+	win := wailsApp.Window.Current()
+	if win == nil {
+		for _, w := range wailsApp.Window.GetAll() {
+			win = w
+			break
+		}
+	}
+	if win == nil {
+		return
+	}
+	win.Restore()
+	win.Show()
+	win.Focus()
 }
