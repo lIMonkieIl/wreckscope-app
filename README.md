@@ -34,16 +34,20 @@ Installer + portable zip:
 
 Outputs under `dist\windows\`:
 
-- `WreckScope-<ver>-windows-amd64-setup.exe` — NSIS installer
+- `WreckScope-<ver>-windows-amd64-setup.exe` — NSIS installer (installed upgrades)
+- `WreckScope-windows-amd64.exe` — bare exe for in-app portable updates
 - `WreckScope-<ver>-windows-amd64-portable.zip` — exe + `settings.json` (`portable: true`)
+- `SHA256SUMS` — checksums for the GitHub updater
+
+Publish all four on a GitHub Release. Portable installs swap the bare exe in place; installed builds download/open the setup package.
 
 Binary-only (no installer):
 
 ```powershell
-wails3 task build
+wails3 task build VERSION=0.1.0
 ```
 
-Artifacts land in `bin\`.
+Artifacts land in `bin\`. Version is baked via ldflags (`internal/version`).
 
 ## Settings
 
@@ -58,7 +62,7 @@ LAN dashboard listens on TCP `8080` by default. Use Device view for the phone QR
 
 ```
 main.go          Wails v3 entry (embeds ui/dist)
-internal/        app, settings, setup, racefeed, recovery, wf2
+internal/        app, settings, setup, update, version, racefeed, recovery, wf2
 ui/              Svelte UI + generated bindings/
 build/           Taskfiles, config.yml, icons, NSIS
 scripts/         Windows package script
