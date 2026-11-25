@@ -17,7 +17,7 @@ func testTelemetryConfigPath(t *testing.T) string {
 	return path
 }
 
-func TestEnableTelemetryKeepsHostPort(t *testing.T) {
+func TestEnableTelemetryForcesListenerHostPort(t *testing.T) {
 	path := testTelemetryConfigPath(t)
 	dir := filepath.Dir(path)
 	original := []byte(`{"udp":[{"enabled":0,"ip":"10.1.2.3","port":"1234","extra":true}],"logging":[{"format":"none"}]}`)
@@ -30,21 +30,21 @@ func TestEnableTelemetryKeepsHostPort(t *testing.T) {
 	if err := EnableAt(path, 23123); err != nil {
 		t.Fatal(err)
 	}
-	if Ready(path, 23123) {
-		t.Fatal("custom host/port should not count as default-ready")
+	if !Ready(path, 23123) {
+		t.Fatal("EnableAt should force 127.0.0.1:23123 and be ready")
 	}
 	updated, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
 	text := string(updated)
-	for _, field := range []string{`"enabled": 1`, `"ip": "10.1.2.3"`, `"port": "1234"`, `"extra": true`, `"logging"`} {
+	for _, field := range []string{`"enabled": 1`, `"ip": "127.0.0.1"`, `"port": "23123"`, `"extra": true`, `"logging"`} {
 		if !strings.Contains(text, field) {
 			t.Errorf("missing %s in %s", field, text)
 		}
 	}
-	if strings.Contains(text, `"127.0.0.1"`) {
-		t.Fatal("should not overwrite existing host")
+	if strings.Contains(text, `"10.1.2.3"`) || strings.Contains(text, `"1234"`) {
+		t.Fatal("should overwrite prior host/port to the WreckScope listener")
 	}
 	backup, err := os.ReadFile(filepath.Join(dir, "config_backup.wreckscope.json"))
 	if err != nil {

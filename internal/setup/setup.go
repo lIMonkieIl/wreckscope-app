@@ -112,7 +112,7 @@ func LooksLikeConfig(path string) error {
 	return nil
 }
 
-// EnableAt sets udp[0].enabled=1. Keeps host/port; fills 127.0.0.1 / defaultPort if empty.
+// EnableAt sets udp[0] to enabled on 127.0.0.1:defaultPort (WreckScope's listener).
 func EnableAt(path string, defaultPort int) error {
 	original, err := os.ReadFile(path)
 	if err != nil {
@@ -128,14 +128,8 @@ func EnableAt(path string, defaultPort int) error {
 	}
 	target := targets[0]
 
-	ip := rawString(target["ip"])
-	port := rawString(target["port"])
-	if ip == "" {
-		ip = "127.0.0.1"
-	}
-	if port == "" {
-		port = strconv.Itoa(defaultPort)
-	}
+	ip := "127.0.0.1"
+	port := strconv.Itoa(defaultPort)
 
 	if string(target["enabled"]) == "1" && rawString(target["ip"]) == ip && rawString(target["port"]) == port {
 		return nil
@@ -143,13 +137,7 @@ func EnableAt(path string, defaultPort int) error {
 
 	target["enabled"] = json.RawMessage("1")
 	target["ip"] = json.RawMessage(strconv.Quote(ip))
-	if looksQuoted(target["port"]) || rawString(target["port"]) == "" {
-		target["port"] = json.RawMessage(strconv.Quote(port))
-	} else if _, err := strconv.Atoi(port); err == nil {
-		target["port"] = json.RawMessage(port)
-	} else {
-		target["port"] = json.RawMessage(strconv.Quote(port))
-	}
+	target["port"] = json.RawMessage(strconv.Quote(port))
 
 	config["udp"], err = json.Marshal(targets)
 	if err != nil {
@@ -188,10 +176,6 @@ func rawString(raw json.RawMessage) string {
 		return strings.TrimSpace(s)
 	}
 	return strings.TrimSpace(string(raw))
-}
-
-func looksQuoted(raw json.RawMessage) bool {
-	return len(raw) > 0 && raw[0] == '"'
 }
 
 func telemetryBackupPath(configPath string) string {
