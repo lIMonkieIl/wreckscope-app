@@ -3,123 +3,34 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Create as $Create } from "@wailsio/runtime";
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Unused imports
 import * as recovery$0 from "../recovery/models.js";
 
-export const Car = recovery$0.Car;
 export type Car = recovery$0.Car;
 
-export class CarAssists {
+export interface CarAssists {
     "flags": number;
     "assistGearbox": number;
     "levelAbs": number;
     "levelTcs": number;
     "levelEsc": number;
-
-    /** Creates a new CarAssists instance. */
-    constructor($$source: Partial<CarAssists> = {}) {
-        if (!("flags" in $$source)) {
-            this["flags"] = 0;
-        }
-        if (!("assistGearbox" in $$source)) {
-            this["assistGearbox"] = 0;
-        }
-        if (!("levelAbs" in $$source)) {
-            this["levelAbs"] = 0;
-        }
-        if (!("levelTcs" in $$source)) {
-            this["levelTcs"] = 0;
-        }
-        if (!("levelEsc" in $$source)) {
-            this["levelEsc"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarAssists instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarAssists {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarAssists($$parsedSource as Partial<CarAssists>);
-    }
 }
 
-export class CarChassis {
+export interface CarChassis {
     "trackWidth": number[];
     "wheelBase": number;
     "steeringWheelLockToLock": number;
     "steeringLock": number;
     "cornerWeights": number[];
-
-    /** Creates a new CarChassis instance. */
-    constructor($$source: Partial<CarChassis> = {}) {
-        if (!("trackWidth" in $$source)) {
-            this["trackWidth"] = Array.from({ length: 2 }, () => 0);
-        }
-        if (!("wheelBase" in $$source)) {
-            this["wheelBase"] = 0;
-        }
-        if (!("steeringWheelLockToLock" in $$source)) {
-            this["steeringWheelLockToLock"] = 0;
-        }
-        if (!("steeringLock" in $$source)) {
-            this["steeringLock"] = 0;
-        }
-        if (!("cornerWeights" in $$source)) {
-            this["cornerWeights"] = Array.from({ length: 4 }, () => 0);
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarChassis instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarChassis {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarChassis($$parsedSource as Partial<CarChassis>);
-    }
 }
 
-export class CarDriveline {
+export interface CarDriveline {
     "type": number;
     "gear": number;
     "gearMax": number;
     "speed": number;
-
-    /** Creates a new CarDriveline instance. */
-    constructor($$source: Partial<CarDriveline> = {}) {
-        if (!("type" in $$source)) {
-            this["type"] = 0;
-        }
-        if (!("gear" in $$source)) {
-            this["gear"] = 0;
-        }
-        if (!("gearMax" in $$source)) {
-            this["gearMax"] = 0;
-        }
-        if (!("speed" in $$source)) {
-            this["speed"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarDriveline instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarDriveline {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarDriveline($$parsedSource as Partial<CarDriveline>);
-    }
 }
 
-export class CarEngine {
+export interface CarEngine {
     "flags": number;
     "rpm": number;
     "rpmMax": number;
@@ -131,56 +42,9 @@ export class CarEngine {
     "tempWater": number;
     "pressureManifold": number;
     "pressureOil": number;
-
-    /** Creates a new CarEngine instance. */
-    constructor($$source: Partial<CarEngine> = {}) {
-        if (!("flags" in $$source)) {
-            this["flags"] = 0;
-        }
-        if (!("rpm" in $$source)) {
-            this["rpm"] = 0;
-        }
-        if (!("rpmMax" in $$source)) {
-            this["rpmMax"] = 0;
-        }
-        if (!("rpmRedline" in $$source)) {
-            this["rpmRedline"] = 0;
-        }
-        if (!("rpmIdle" in $$source)) {
-            this["rpmIdle"] = 0;
-        }
-        if (!("torque" in $$source)) {
-            this["torque"] = 0;
-        }
-        if (!("power" in $$source)) {
-            this["power"] = 0;
-        }
-        if (!("tempBlock" in $$source)) {
-            this["tempBlock"] = 0;
-        }
-        if (!("tempWater" in $$source)) {
-            this["tempWater"] = 0;
-        }
-        if (!("pressureManifold" in $$source)) {
-            this["pressureManifold"] = 0;
-        }
-        if (!("pressureOil" in $$source)) {
-            this["pressureOil"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarEngine instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarEngine {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarEngine($$parsedSource as Partial<CarEngine>);
-    }
 }
 
-export class CarFull {
+export interface CarFull {
     "assists": CarAssists;
     "chassis": CarChassis;
     "driveline": CarDriveline;
@@ -189,116 +53,17 @@ export class CarFull {
     "orientation": CarMotionOrientation;
     "velocity": CarMotionVelocity;
     "tires": CarTire[];
-
-    /** Creates a new CarFull instance. */
-    constructor($$source: Partial<CarFull> = {}) {
-        if (!("assists" in $$source)) {
-            this["assists"] = (new CarAssists());
-        }
-        if (!("chassis" in $$source)) {
-            this["chassis"] = (new CarChassis());
-        }
-        if (!("driveline" in $$source)) {
-            this["driveline"] = (new CarDriveline());
-        }
-        if (!("engine" in $$source)) {
-            this["engine"] = (new CarEngine());
-        }
-        if (!("input" in $$source)) {
-            this["input"] = (new CarInput());
-        }
-        if (!("orientation" in $$source)) {
-            this["orientation"] = (new CarMotionOrientation());
-        }
-        if (!("velocity" in $$source)) {
-            this["velocity"] = (new CarMotionVelocity());
-        }
-        if (!("tires" in $$source)) {
-            this["tires"] = Array.from({ length: 4 }, () => (new CarTire()));
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarFull instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarFull {
-        const $$createField0_0 = $$createType0;
-        const $$createField1_0 = $$createType1;
-        const $$createField2_0 = $$createType2;
-        const $$createField3_0 = $$createType3;
-        const $$createField4_0 = $$createType4;
-        const $$createField5_0 = $$createType5;
-        const $$createField6_0 = $$createType6;
-        const $$createField7_0 = $$createType8;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("assists" in $$parsedSource) {
-            $$parsedSource["assists"] = $$createField0_0($$parsedSource["assists"]);
-        }
-        if ("chassis" in $$parsedSource) {
-            $$parsedSource["chassis"] = $$createField1_0($$parsedSource["chassis"]);
-        }
-        if ("driveline" in $$parsedSource) {
-            $$parsedSource["driveline"] = $$createField2_0($$parsedSource["driveline"]);
-        }
-        if ("engine" in $$parsedSource) {
-            $$parsedSource["engine"] = $$createField3_0($$parsedSource["engine"]);
-        }
-        if ("input" in $$parsedSource) {
-            $$parsedSource["input"] = $$createField4_0($$parsedSource["input"]);
-        }
-        if ("orientation" in $$parsedSource) {
-            $$parsedSource["orientation"] = $$createField5_0($$parsedSource["orientation"]);
-        }
-        if ("velocity" in $$parsedSource) {
-            $$parsedSource["velocity"] = $$createField6_0($$parsedSource["velocity"]);
-        }
-        if ("tires" in $$parsedSource) {
-            $$parsedSource["tires"] = $$createField7_0($$parsedSource["tires"]);
-        }
-        return new CarFull($$parsedSource as Partial<CarFull>);
-    }
 }
 
-export class CarInput {
+export interface CarInput {
     "throttle": number;
     "brake": number;
     "clutch": number;
     "handbrake": number;
     "steering": number;
-
-    /** Creates a new CarInput instance. */
-    constructor($$source: Partial<CarInput> = {}) {
-        if (!("throttle" in $$source)) {
-            this["throttle"] = 0;
-        }
-        if (!("brake" in $$source)) {
-            this["brake"] = 0;
-        }
-        if (!("clutch" in $$source)) {
-            this["clutch"] = 0;
-        }
-        if (!("handbrake" in $$source)) {
-            this["handbrake"] = 0;
-        }
-        if (!("steering" in $$source)) {
-            this["steering"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarInput instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarInput {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarInput($$parsedSource as Partial<CarInput>);
-    }
 }
 
-export class CarMotionOrientation {
+export interface CarMotionOrientation {
     "positionX": number;
     "positionY": number;
     "positionZ": number;
@@ -309,53 +74,9 @@ export class CarMotionOrientation {
     "extentsX": number;
     "extentsY": number;
     "extentsZ": number;
-
-    /** Creates a new CarMotionOrientation instance. */
-    constructor($$source: Partial<CarMotionOrientation> = {}) {
-        if (!("positionX" in $$source)) {
-            this["positionX"] = 0;
-        }
-        if (!("positionY" in $$source)) {
-            this["positionY"] = 0;
-        }
-        if (!("positionZ" in $$source)) {
-            this["positionZ"] = 0;
-        }
-        if (!("orientationQuaternionX" in $$source)) {
-            this["orientationQuaternionX"] = 0;
-        }
-        if (!("orientationQuaternionY" in $$source)) {
-            this["orientationQuaternionY"] = 0;
-        }
-        if (!("orientationQuaternionZ" in $$source)) {
-            this["orientationQuaternionZ"] = 0;
-        }
-        if (!("orientationQuaternionW" in $$source)) {
-            this["orientationQuaternionW"] = 0;
-        }
-        if (!("extentsX" in $$source)) {
-            this["extentsX"] = 0;
-        }
-        if (!("extentsY" in $$source)) {
-            this["extentsY"] = 0;
-        }
-        if (!("extentsZ" in $$source)) {
-            this["extentsZ"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarMotionOrientation instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarMotionOrientation {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarMotionOrientation($$parsedSource as Partial<CarMotionOrientation>);
-    }
 }
 
-export class CarMotionVelocity {
+export interface CarMotionVelocity {
     "velocityLocalX": number;
     "velocityLocalY": number;
     "velocityLocalZ": number;
@@ -365,50 +86,9 @@ export class CarMotionVelocity {
     "accelerationLocalX": number;
     "accelerationLocalY": number;
     "accelerationLocalZ": number;
-
-    /** Creates a new CarMotionVelocity instance. */
-    constructor($$source: Partial<CarMotionVelocity> = {}) {
-        if (!("velocityLocalX" in $$source)) {
-            this["velocityLocalX"] = 0;
-        }
-        if (!("velocityLocalY" in $$source)) {
-            this["velocityLocalY"] = 0;
-        }
-        if (!("velocityLocalZ" in $$source)) {
-            this["velocityLocalZ"] = 0;
-        }
-        if (!("angularVelocityX" in $$source)) {
-            this["angularVelocityX"] = 0;
-        }
-        if (!("angularVelocityY" in $$source)) {
-            this["angularVelocityY"] = 0;
-        }
-        if (!("angularVelocityZ" in $$source)) {
-            this["angularVelocityZ"] = 0;
-        }
-        if (!("accelerationLocalX" in $$source)) {
-            this["accelerationLocalX"] = 0;
-        }
-        if (!("accelerationLocalY" in $$source)) {
-            this["accelerationLocalY"] = 0;
-        }
-        if (!("accelerationLocalZ" in $$source)) {
-            this["accelerationLocalZ"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarMotionVelocity instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarMotionVelocity {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarMotionVelocity($$parsedSource as Partial<CarMotionVelocity>);
-    }
 }
 
-export class CarTire {
+export interface CarTire {
     "rps": number;
     "camber": number;
     "slipRatio": number;
@@ -424,130 +104,26 @@ export class CarTire {
     "suspensionDispNorm": number;
     "positionVertical": number;
     "surfaceType": number;
-
-    /** Creates a new CarTire instance. */
-    constructor($$source: Partial<CarTire> = {}) {
-        if (!("rps" in $$source)) {
-            this["rps"] = 0;
-        }
-        if (!("camber" in $$source)) {
-            this["camber"] = 0;
-        }
-        if (!("slipRatio" in $$source)) {
-            this["slipRatio"] = 0;
-        }
-        if (!("slipAngle" in $$source)) {
-            this["slipAngle"] = 0;
-        }
-        if (!("radiusUnloaded" in $$source)) {
-            this["radiusUnloaded"] = 0;
-        }
-        if (!("loadVertical" in $$source)) {
-            this["loadVertical"] = 0;
-        }
-        if (!("forceLat" in $$source)) {
-            this["forceLat"] = 0;
-        }
-        if (!("forceLong" in $$source)) {
-            this["forceLong"] = 0;
-        }
-        if (!("temperatureInner" in $$source)) {
-            this["temperatureInner"] = 0;
-        }
-        if (!("temperatureTread" in $$source)) {
-            this["temperatureTread"] = 0;
-        }
-        if (!("suspensionVelocity" in $$source)) {
-            this["suspensionVelocity"] = 0;
-        }
-        if (!("suspensionDisplacement" in $$source)) {
-            this["suspensionDisplacement"] = 0;
-        }
-        if (!("suspensionDispNorm" in $$source)) {
-            this["suspensionDispNorm"] = 0;
-        }
-        if (!("positionVertical" in $$source)) {
-            this["positionVertical"] = 0;
-        }
-        if (!("surfaceType" in $$source)) {
-            this["surfaceType"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new CarTire instance from a string or object.
-     */
-    static createFrom($$source: any = {}): CarTire {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new CarTire($$parsedSource as Partial<CarTire>);
-    }
 }
 
-export class InputExtended {
+export interface InputExtended {
     "flags": number;
     "ffbForce": number;
-
-    /** Creates a new InputExtended instance. */
-    constructor($$source: Partial<InputExtended> = {}) {
-        if (!("flags" in $$source)) {
-            this["flags"] = 0;
-        }
-        if (!("ffbForce" in $$source)) {
-            this["ffbForce"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new InputExtended instance from a string or object.
-     */
-    static createFrom($$source: any = {}): InputExtended {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new InputExtended($$parsedSource as Partial<InputExtended>);
-    }
 }
 
-export class ParticipantDamage {
+export interface ParticipantDamage {
     /**
      * raw 21-byte packed field
      */
-    "damageStates": string;
+    "damageStates": string | null;
 
     /**
      * unpacked 3-bit states (PART_COUNT)
      */
-    "parts"?: string;
-
-    /** Creates a new ParticipantDamage instance. */
-    constructor($$source: Partial<ParticipantDamage> = {}) {
-        if (!("damageStates" in $$source)) {
-            this["damageStates"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ParticipantDamage instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ParticipantDamage {
-        const $$createField0_0 = $Create.ByteSlice;
-        const $$createField1_0 = $Create.ByteSlice;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("damageStates" in $$parsedSource) {
-            $$parsedSource["damageStates"] = $$createField0_0($$parsedSource["damageStates"]);
-        }
-        if ("parts" in $$parsedSource) {
-            $$parsedSource["parts"] = $$createField1_0($$parsedSource["parts"]);
-        }
-        return new ParticipantDamage($$parsedSource as Partial<ParticipantDamage>);
-    }
+    "parts"?: string | null;
 }
 
-export class ParticipantInfo {
+export interface ParticipantInfo {
     "carId": string;
     "carName": string;
     "playerName": string;
@@ -555,44 +131,9 @@ export class ParticipantInfo {
     "lastNormalTrackStatusTime": number;
     "lastCollisionTime": number;
     "lastResetTime": number;
-
-    /** Creates a new ParticipantInfo instance. */
-    constructor($$source: Partial<ParticipantInfo> = {}) {
-        if (!("carId" in $$source)) {
-            this["carId"] = "";
-        }
-        if (!("carName" in $$source)) {
-            this["carName"] = "";
-        }
-        if (!("playerName" in $$source)) {
-            this["playerName"] = "";
-        }
-        if (!("participantIndex" in $$source)) {
-            this["participantIndex"] = 0;
-        }
-        if (!("lastNormalTrackStatusTime" in $$source)) {
-            this["lastNormalTrackStatusTime"] = 0;
-        }
-        if (!("lastCollisionTime" in $$source)) {
-            this["lastCollisionTime"] = 0;
-        }
-        if (!("lastResetTime" in $$source)) {
-            this["lastResetTime"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ParticipantInfo instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ParticipantInfo {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ParticipantInfo($$parsedSource as Partial<ParticipantInfo>);
-    }
 }
 
-export class ParticipantLeaderboard {
+export interface ParticipantLeaderboard {
     "status": number;
     "trackStatus": number;
     "lapCurrent": number;
@@ -605,59 +146,9 @@ export class ParticipantLeaderboard {
     "points": number;
     "deltaLeader": number;
     "lapTiming": number;
-
-    /** Creates a new ParticipantLeaderboard instance. */
-    constructor($$source: Partial<ParticipantLeaderboard> = {}) {
-        if (!("status" in $$source)) {
-            this["status"] = 0;
-        }
-        if (!("trackStatus" in $$source)) {
-            this["trackStatus"] = 0;
-        }
-        if (!("lapCurrent" in $$source)) {
-            this["lapCurrent"] = 0;
-        }
-        if (!("position" in $$source)) {
-            this["position"] = 0;
-        }
-        if (!("health" in $$source)) {
-            this["health"] = 0;
-        }
-        if (!("wrecks" in $$source)) {
-            this["wrecks"] = 0;
-        }
-        if (!("frags" in $$source)) {
-            this["frags"] = 0;
-        }
-        if (!("assists" in $$source)) {
-            this["assists"] = 0;
-        }
-        if (!("score" in $$source)) {
-            this["score"] = 0;
-        }
-        if (!("points" in $$source)) {
-            this["points"] = 0;
-        }
-        if (!("deltaLeader" in $$source)) {
-            this["deltaLeader"] = 0;
-        }
-        if (!("lapTiming" in $$source)) {
-            this["lapTiming"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ParticipantLeaderboard instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ParticipantLeaderboard {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ParticipantLeaderboard($$parsedSource as Partial<ParticipantLeaderboard>);
-    }
 }
 
-export class ParticipantTiming {
+export interface ParticipantTiming {
     "lapTimeCurrent": number;
     "lapTimePenaltyCurrent": number;
     "lapTimeLast": number;
@@ -666,47 +157,9 @@ export class ParticipantTiming {
     "deltaAhead": number;
     "deltaBehind": number;
     "lapProgress": number;
-
-    /** Creates a new ParticipantTiming instance. */
-    constructor($$source: Partial<ParticipantTiming> = {}) {
-        if (!("lapTimeCurrent" in $$source)) {
-            this["lapTimeCurrent"] = 0;
-        }
-        if (!("lapTimePenaltyCurrent" in $$source)) {
-            this["lapTimePenaltyCurrent"] = 0;
-        }
-        if (!("lapTimeLast" in $$source)) {
-            this["lapTimeLast"] = 0;
-        }
-        if (!("lapTimeBest" in $$source)) {
-            this["lapTimeBest"] = 0;
-        }
-        if (!("lapBest" in $$source)) {
-            this["lapBest"] = 0;
-        }
-        if (!("deltaAhead" in $$source)) {
-            this["deltaAhead"] = 0;
-        }
-        if (!("deltaBehind" in $$source)) {
-            this["deltaBehind"] = 0;
-        }
-        if (!("lapProgress" in $$source)) {
-            this["lapProgress"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ParticipantTiming instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ParticipantTiming {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ParticipantTiming($$parsedSource as Partial<ParticipantTiming>);
-    }
 }
 
-export class ParticipantTimingSectors {
+export interface ParticipantTimingSectors {
     "sectorTimeCurrentLap1": number;
     "sectorTimeCurrentLap2": number;
     "sectorTimeLastLap1": number;
@@ -716,53 +169,12 @@ export class ParticipantTimingSectors {
     "sectorTimeBest1": number;
     "sectorTimeBest2": number;
     "sectorTimeBest3": number;
-
-    /** Creates a new ParticipantTimingSectors instance. */
-    constructor($$source: Partial<ParticipantTimingSectors> = {}) {
-        if (!("sectorTimeCurrentLap1" in $$source)) {
-            this["sectorTimeCurrentLap1"] = 0;
-        }
-        if (!("sectorTimeCurrentLap2" in $$source)) {
-            this["sectorTimeCurrentLap2"] = 0;
-        }
-        if (!("sectorTimeLastLap1" in $$source)) {
-            this["sectorTimeLastLap1"] = 0;
-        }
-        if (!("sectorTimeLastLap2" in $$source)) {
-            this["sectorTimeLastLap2"] = 0;
-        }
-        if (!("sectorTimeBestLap1" in $$source)) {
-            this["sectorTimeBestLap1"] = 0;
-        }
-        if (!("sectorTimeBestLap2" in $$source)) {
-            this["sectorTimeBestLap2"] = 0;
-        }
-        if (!("sectorTimeBest1" in $$source)) {
-            this["sectorTimeBest1"] = 0;
-        }
-        if (!("sectorTimeBest2" in $$source)) {
-            this["sectorTimeBest2"] = 0;
-        }
-        if (!("sectorTimeBest3" in $$source)) {
-            this["sectorTimeBest3"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ParticipantTimingSectors instance from a string or object.
-     */
-    static createFrom($$source: any = {}): ParticipantTimingSectors {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ParticipantTimingSectors($$parsedSource as Partial<ParticipantTimingSectors>);
-    }
 }
 
 /**
  * PlayerTelemetry mirrors PacketMain's player-side fields (session lives on Race).
  */
-export class PlayerTelemetry {
+export interface PlayerTelemetry {
     "marshalFlagsPlayer": number;
     "participantPlayerLeaderboard": ParticipantLeaderboard;
     "participantPlayerTiming": ParticipantTiming;
@@ -772,81 +184,12 @@ export class PlayerTelemetry {
     "carPlayer": CarFull;
     "playerStatusFlags": number;
     "inputExtended": InputExtended;
-
-    /** Creates a new PlayerTelemetry instance. */
-    constructor($$source: Partial<PlayerTelemetry> = {}) {
-        if (!("marshalFlagsPlayer" in $$source)) {
-            this["marshalFlagsPlayer"] = 0;
-        }
-        if (!("participantPlayerLeaderboard" in $$source)) {
-            this["participantPlayerLeaderboard"] = (new ParticipantLeaderboard());
-        }
-        if (!("participantPlayerTiming" in $$source)) {
-            this["participantPlayerTiming"] = (new ParticipantTiming());
-        }
-        if (!("participantPlayerTimingSectors" in $$source)) {
-            this["participantPlayerTimingSectors"] = (new ParticipantTimingSectors());
-        }
-        if (!("participantPlayerInfo" in $$source)) {
-            this["participantPlayerInfo"] = (new ParticipantInfo());
-        }
-        if (!("participantPlayerDamage" in $$source)) {
-            this["participantPlayerDamage"] = (new ParticipantDamage());
-        }
-        if (!("carPlayer" in $$source)) {
-            this["carPlayer"] = (new CarFull());
-        }
-        if (!("playerStatusFlags" in $$source)) {
-            this["playerStatusFlags"] = 0;
-        }
-        if (!("inputExtended" in $$source)) {
-            this["inputExtended"] = (new InputExtended());
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new PlayerTelemetry instance from a string or object.
-     */
-    static createFrom($$source: any = {}): PlayerTelemetry {
-        const $$createField1_0 = $$createType9;
-        const $$createField2_0 = $$createType10;
-        const $$createField3_0 = $$createType11;
-        const $$createField4_0 = $$createType12;
-        const $$createField5_0 = $$createType13;
-        const $$createField6_0 = $$createType14;
-        const $$createField8_0 = $$createType15;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("participantPlayerLeaderboard" in $$parsedSource) {
-            $$parsedSource["participantPlayerLeaderboard"] = $$createField1_0($$parsedSource["participantPlayerLeaderboard"]);
-        }
-        if ("participantPlayerTiming" in $$parsedSource) {
-            $$parsedSource["participantPlayerTiming"] = $$createField2_0($$parsedSource["participantPlayerTiming"]);
-        }
-        if ("participantPlayerTimingSectors" in $$parsedSource) {
-            $$parsedSource["participantPlayerTimingSectors"] = $$createField3_0($$parsedSource["participantPlayerTimingSectors"]);
-        }
-        if ("participantPlayerInfo" in $$parsedSource) {
-            $$parsedSource["participantPlayerInfo"] = $$createField4_0($$parsedSource["participantPlayerInfo"]);
-        }
-        if ("participantPlayerDamage" in $$parsedSource) {
-            $$parsedSource["participantPlayerDamage"] = $$createField5_0($$parsedSource["participantPlayerDamage"]);
-        }
-        if ("carPlayer" in $$parsedSource) {
-            $$parsedSource["carPlayer"] = $$createField6_0($$parsedSource["carPlayer"]);
-        }
-        if ("inputExtended" in $$parsedSource) {
-            $$parsedSource["inputExtended"] = $$createField8_0($$parsedSource["inputExtended"]);
-        }
-        return new PlayerTelemetry($$parsedSource as Partial<PlayerTelemetry>);
-    }
 }
 
 /**
  * RaceDetails: Session + PacketMain status. JSON includes UI aliases and Session names.
  */
-export class RaceDetails {
+export interface RaceDetails {
     "trackId": string;
 
     /**
@@ -907,47 +250,6 @@ export class RaceDetails {
      * raceTime
      */
     "clock": number;
-
-    /** Creates a new RaceDetails instance. */
-    constructor($$source: Partial<RaceDetails> = {}) {
-        if (!("trackId" in $$source)) {
-            this["trackId"] = "";
-        }
-        if (!("track" in $$source)) {
-            this["track"] = "";
-        }
-        if (!("laps" in $$source)) {
-            this["laps"] = 0;
-        }
-        if (!("mode" in $$source)) {
-            this["mode"] = 0;
-        }
-        if (!("damage" in $$source)) {
-            this["damage"] = 0;
-        }
-        if (!("grid" in $$source)) {
-            this["grid"] = 0;
-        }
-        if (!("remaining" in $$source)) {
-            this["remaining"] = 0;
-        }
-        if (!("flags" in $$source)) {
-            this["flags"] = 0;
-        }
-        if (!("clock" in $$source)) {
-            this["clock"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new RaceDetails instance from a string or object.
-     */
-    static createFrom($$source: any = {}): RaceDetails {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new RaceDetails($$parsedSource as Partial<RaceDetails>);
-    }
 }
 
 /**
@@ -956,7 +258,7 @@ export class RaceDetails {
  * TelemetryConfigPath is the game config.json path (game file stays separate).
  * SetupCompleted is first-run only, not "telemetry already enabled".
  */
-export class Settings {
+export interface Settings {
     "drawTrackOutline": boolean;
     "cautionSeconds": number;
     "alertSeconds": number;
@@ -978,65 +280,18 @@ export class Settings {
     "telemetryConfigPath"?: string;
     "setupCompleted": boolean;
     "portable"?: boolean;
-
-    /** Creates a new Settings instance. */
-    constructor($$source: Partial<Settings> = {}) {
-        if (!("drawTrackOutline" in $$source)) {
-            this["drawTrackOutline"] = false;
-        }
-        if (!("cautionSeconds" in $$source)) {
-            this["cautionSeconds"] = 0;
-        }
-        if (!("alertSeconds" in $$source)) {
-            this["alertSeconds"] = 0;
-        }
-        if (!("speedThreshold" in $$source)) {
-            this["speedThreshold"] = 0;
-        }
-        if (!("hideBots" in $$source)) {
-            this["hideBots"] = false;
-        }
-        if (!("speedUnit" in $$source)) {
-            this["speedUnit"] = "";
-        }
-        if (!("muteAlertSound" in $$source)) {
-            this["muteAlertSound"] = false;
-        }
-        if (!("theme" in $$source)) {
-            this["theme"] = "";
-        }
-        if (!("mode" in $$source)) {
-            this["mode"] = "";
-        }
-        if (!("view" in $$source)) {
-            this["view"] = "";
-        }
-        if (!("setupCompleted" in $$source)) {
-            this["setupCompleted"] = false;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new Settings instance from a string or object.
-     */
-    static createFrom($$source: any = {}): Settings {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new Settings($$parsedSource as Partial<Settings>);
-    }
 }
 
-export class Snapshot {
+export interface Snapshot {
     "race"?: RaceDetails | null;
     "player"?: PlayerTelemetry | null;
-    "standings": Standing[];
+    "standings": Standing[] | null;
     "mode": string;
     "connection": string;
     "lastPacket": string;
     "packetCount": number;
-    "packetTypes": { [_ in `${number}`]?: number };
-    "cars": Car[];
+    "packetTypes": { [_ in `${number}`]?: number } | null;
+    "cars": Car[] | null;
     "settings": Settings;
     "sessionRacing": boolean;
     "raceEpoch": number;
@@ -1045,90 +300,12 @@ export class Snapshot {
     /**
      * player slots assigned as medics (no cap)
      */
-    "medics": number[];
+    "medics": number[] | null;
     "participantVisibility"?: number | null;
     "message": string;
-
-    /** Creates a new Snapshot instance. */
-    constructor($$source: Partial<Snapshot> = {}) {
-        if (!("standings" in $$source)) {
-            this["standings"] = [];
-        }
-        if (!("mode" in $$source)) {
-            this["mode"] = "";
-        }
-        if (!("connection" in $$source)) {
-            this["connection"] = "";
-        }
-        if (!("lastPacket" in $$source)) {
-            this["lastPacket"] = "";
-        }
-        if (!("packetCount" in $$source)) {
-            this["packetCount"] = 0;
-        }
-        if (!("packetTypes" in $$source)) {
-            this["packetTypes"] = {};
-        }
-        if (!("cars" in $$source)) {
-            this["cars"] = [];
-        }
-        if (!("settings" in $$source)) {
-            this["settings"] = (new Settings());
-        }
-        if (!("sessionRacing" in $$source)) {
-            this["sessionRacing"] = false;
-        }
-        if (!("raceEpoch" in $$source)) {
-            this["raceEpoch"] = 0;
-        }
-        if (!("medics" in $$source)) {
-            this["medics"] = [];
-        }
-        if (!("message" in $$source)) {
-            this["message"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new Snapshot instance from a string or object.
-     */
-    static createFrom($$source: any = {}): Snapshot {
-        const $$createField0_0 = $$createType17;
-        const $$createField1_0 = $$createType19;
-        const $$createField2_0 = $$createType21;
-        const $$createField7_0 = $$createType22;
-        const $$createField8_0 = $$createType24;
-        const $$createField9_0 = $$createType25;
-        const $$createField13_0 = $$createType26;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("race" in $$parsedSource) {
-            $$parsedSource["race"] = $$createField0_0($$parsedSource["race"]);
-        }
-        if ("player" in $$parsedSource) {
-            $$parsedSource["player"] = $$createField1_0($$parsedSource["player"]);
-        }
-        if ("standings" in $$parsedSource) {
-            $$parsedSource["standings"] = $$createField2_0($$parsedSource["standings"]);
-        }
-        if ("packetTypes" in $$parsedSource) {
-            $$parsedSource["packetTypes"] = $$createField7_0($$parsedSource["packetTypes"]);
-        }
-        if ("cars" in $$parsedSource) {
-            $$parsedSource["cars"] = $$createField8_0($$parsedSource["cars"]);
-        }
-        if ("settings" in $$parsedSource) {
-            $$parsedSource["settings"] = $$createField9_0($$parsedSource["settings"]);
-        }
-        if ("medics" in $$parsedSource) {
-            $$parsedSource["medics"] = $$createField13_0($$parsedSource["medics"]);
-        }
-        return new Snapshot($$parsedSource as Partial<Snapshot>);
-    }
 }
 
-export class Standing {
+export interface Standing {
     "trackStatus": number;
     "frags": number;
     "wrecks": number;
@@ -1159,102 +336,4 @@ export class Standing {
     "current"?: number | null;
     "last"?: number | null;
     "best"?: number | null;
-
-    /** Creates a new Standing instance. */
-    constructor($$source: Partial<Standing> = {}) {
-        if (!("trackStatus" in $$source)) {
-            this["trackStatus"] = 0;
-        }
-        if (!("frags" in $$source)) {
-            this["frags"] = 0;
-        }
-        if (!("wrecks" in $$source)) {
-            this["wrecks"] = 0;
-        }
-        if (!("slot" in $$source)) {
-            this["slot"] = 0;
-        }
-        if (!("name" in $$source)) {
-            this["name"] = "";
-        }
-        if (!("carId" in $$source)) {
-            this["carId"] = "";
-        }
-        if (!("status" in $$source)) {
-            this["status"] = 0;
-        }
-        if (!("place" in $$source)) {
-            this["place"] = 0;
-        }
-        if (!("lap" in $$source)) {
-            this["lap"] = 0;
-        }
-        if (!("health" in $$source)) {
-            this["health"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new Standing instance from a string or object.
-     */
-    static createFrom($$source: any = {}): Standing {
-        const $$createField7_0 = $$createType27;
-        const $$createField8_0 = $$createType28;
-        const $$createField9_0 = $$createType29;
-        const $$createField10_0 = $$createType30;
-        const $$createField11_0 = $$createType31;
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        if ("leaderboard" in $$parsedSource) {
-            $$parsedSource["leaderboard"] = $$createField7_0($$parsedSource["leaderboard"]);
-        }
-        if ("timing" in $$parsedSource) {
-            $$parsedSource["timing"] = $$createField8_0($$parsedSource["timing"]);
-        }
-        if ("sectors" in $$parsedSource) {
-            $$parsedSource["sectors"] = $$createField9_0($$parsedSource["sectors"]);
-        }
-        if ("info" in $$parsedSource) {
-            $$parsedSource["info"] = $$createField10_0($$parsedSource["info"]);
-        }
-        if ("damage" in $$parsedSource) {
-            $$parsedSource["damage"] = $$createField11_0($$parsedSource["damage"]);
-        }
-        return new Standing($$parsedSource as Partial<Standing>);
-    }
 }
-
-// Private type creation functions
-const $$createType0 = CarAssists.createFrom;
-const $$createType1 = CarChassis.createFrom;
-const $$createType2 = CarDriveline.createFrom;
-const $$createType3 = CarEngine.createFrom;
-const $$createType4 = CarInput.createFrom;
-const $$createType5 = CarMotionOrientation.createFrom;
-const $$createType6 = CarMotionVelocity.createFrom;
-const $$createType7 = CarTire.createFrom;
-const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = ParticipantLeaderboard.createFrom;
-const $$createType10 = ParticipantTiming.createFrom;
-const $$createType11 = ParticipantTimingSectors.createFrom;
-const $$createType12 = ParticipantInfo.createFrom;
-const $$createType13 = ParticipantDamage.createFrom;
-const $$createType14 = CarFull.createFrom;
-const $$createType15 = InputExtended.createFrom;
-const $$createType16 = RaceDetails.createFrom;
-const $$createType17 = $Create.Nullable($$createType16);
-const $$createType18 = PlayerTelemetry.createFrom;
-const $$createType19 = $Create.Nullable($$createType18);
-const $$createType20 = Standing.createFrom;
-const $$createType21 = $Create.Array($$createType20);
-const $$createType22 = $Create.Map($Create.Any, $Create.Any);
-const $$createType23 = recovery$0.Car.createFrom;
-const $$createType24 = $Create.Array($$createType23);
-const $$createType25 = Settings.createFrom;
-const $$createType26 = $Create.Array($Create.Any);
-const $$createType27 = $Create.Nullable($$createType9);
-const $$createType28 = $Create.Nullable($$createType10);
-const $$createType29 = $Create.Nullable($$createType11);
-const $$createType30 = $Create.Nullable($$createType12);
-const $$createType31 = $Create.Nullable($$createType13);

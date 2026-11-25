@@ -8,7 +8,7 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -29,9 +29,7 @@ export function AppVersion(): $CancellablePromise<string> {
  * Portable: in-place swap + restart. Installed: launch setup installer.
  */
 export function ApplyUpdate(): $CancellablePromise<update$0.Status> {
-    return $Call.ByID(2287023727).then(($result: any) => {
-        return $$createType0($result);
-    });
+    return $Call.ByID(2287023727);
 }
 
 export function BrowseTelemetryConfig(): $CancellablePromise<string> {
@@ -42,108 +40,82 @@ export function BrowseTelemetryConfig(): $CancellablePromise<string> {
  * CheckForUpdates queries GitHub Releases. Does not download.
  */
 export function CheckForUpdates(): $CancellablePromise<update$0.Status> {
-    return $Call.ByID(3537445317).then(($result: any) => {
-        return $$createType0($result);
-    });
+    return $Call.ByID(3537445317);
 }
 
-export function CompleteSetup(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(2727785878).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function CompleteSetup(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(2727785878);
 }
 
 /**
  * EnableTelemetry enables UDP on the auto-detected config path.
  */
-export function EnableTelemetry(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(1553059128).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function EnableTelemetry(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(1553059128);
 }
 
 /**
  * EnableTelemetryAt enables UDP on path and remembers it.
  */
-export function EnableTelemetryAt(path: string): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(2561296029, path).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function EnableTelemetryAt(path: string): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(2561296029, path);
 }
 
 /**
  * FindTelemetryConfig locates the game telemetry config.json (no write).
  */
-export function FindTelemetryConfig(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(2938223154).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function FindTelemetryConfig(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(2938223154);
 }
 
 export function GetSettings(): $CancellablePromise<racefeed$0.Settings> {
-    return $Call.ByID(329210511).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(329210511);
 }
 
 /**
  * LastUpdateStatus returns the most recent check/apply result (may be empty).
  */
 export function LastUpdateStatus(): $CancellablePromise<update$0.Status> {
-    return $Call.ByID(2989430525).then(($result: any) => {
-        return $$createType0($result);
-    });
+    return $Call.ByID(2989430525);
 }
 
 /**
  * PhoneAccess: LAN phone URLs for the Device view QR. Full app, not view-only.
  */
-export function PhoneAccess(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(3507846120).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function PhoneAccess(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(3507846120);
 }
 
 /**
  * ProbeTelemetry reads the game config; does not require it already enabled.
  */
-export function ProbeTelemetry(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(1924274607).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function ProbeTelemetry(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(1924274607);
 }
 
 /**
  * ProbeTelemetryAt checks a chosen config.json path without writing.
  */
-export function ProbeTelemetryAt(path: string): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(2806276218, path).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function ProbeTelemetryAt(path: string): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(2806276218, path);
 }
 
 /**
  * ResetTelemetrySetup clears the saved telemetry path. Leaves setupCompleted alone.
  */
-export function ResetTelemetrySetup(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(1662718953).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function ResetTelemetrySetup(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(1662718953);
 }
 
 /**
  * RestoreTelemetryBackup writes config_backup.wreckscope.json over config.json, then deletes the backup.
  */
-export function RestoreTelemetryBackup(path: string): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(1276661065, path).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function RestoreTelemetryBackup(path: string): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(1276661065, path);
 }
 
 export function SaveAppearance(theme: string, mode: string): $CancellablePromise<racefeed$0.Settings> {
-    return $Call.ByID(2589290681, theme, mode).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(2589290681, theme, mode);
 }
 
 /**
@@ -151,9 +123,7 @@ export function SaveAppearance(theme: string, mode: string): $CancellablePromise
  * keep current values (UI forms omit them). Portable stays latched once set.
  */
 export function SaveSettings(settings: racefeed$0.Settings): $CancellablePromise<racefeed$0.Settings> {
-    return $Call.ByID(849551334, settings).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(849551334, settings);
 }
 
 /**
@@ -166,31 +136,23 @@ export function SetMode(mode: string): $CancellablePromise<void> {
 /**
  * SetupStatus: first-run + telemetry probe. needsWizard == !setupCompleted.
  */
-export function SetupStatus(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(1266397933).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function SetupStatus(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(1266397933);
 }
 
 export function Snapshot(): $CancellablePromise<racefeed$0.Snapshot> {
-    return $Call.ByID(2564936578).then(($result: any) => {
-        return $$createType3($result);
-    });
+    return $Call.ByID(2564936578);
 }
 
-export function TelemetryStatus(): $CancellablePromise<{ [_ in string]?: any }> {
-    return $Call.ByID(921559039).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function TelemetryStatus(): $CancellablePromise<{ [_ in string]?: any } | null> {
+    return $Call.ByID(921559039);
 }
 
 /**
  * ToggleMedic assigns or clears a medic slot (PC + LAN; no cap).
  */
-export function ToggleMedic(slot: number): $CancellablePromise<number[]> {
-    return $Call.ByID(1180216976, slot).then(($result: any) => {
-        return $$createType4($result);
-    });
+export function ToggleMedic(slot: number): $CancellablePromise<number[] | null> {
+    return $Call.ByID(1180216976, slot);
 }
 
 /**
@@ -199,10 +161,3 @@ export function ToggleMedic(slot: number): $CancellablePromise<number[]> {
 export function UpdateMode(): $CancellablePromise<string> {
     return $Call.ByID(2877189504);
 }
-
-// Private type creation functions
-const $$createType0 = update$0.Status.createFrom;
-const $$createType1 = $Create.Map($Create.Any, $Create.Any);
-const $$createType2 = racefeed$0.Settings.createFrom;
-const $$createType3 = racefeed$0.Snapshot.createFrom;
-const $$createType4 = $Create.Array($Create.Any);
