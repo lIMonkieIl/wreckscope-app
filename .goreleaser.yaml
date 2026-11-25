@@ -1,0 +1,29 @@
+# Publishes the existing Wails/NSIS Windows package — does not build a bare Go binary.
+# CI runs scripts/package-windows.ps1 first, then goreleaser attaches those artifacts.
+version: 2
+
+project_name: wreckscope
+
+# Keep GoReleaser's worktree out of dist/windows (our NSIS output).
+dist: .goreleaser-out
+
+builds:
+  - id: skip-go
+    skip: true
+
+# No Go archives — release assets come from extra_files (NSIS setup + SHA256SUMS).
+checksum:
+  disable: true
+
+changelog:
+  # Monkie writes release notes on the draft; do not auto-generate.
+  disable: true
+
+release:
+  draft: true
+  replace_existing_draft: true
+  name_template: "WreckScope {{.Version}}"
+  mode: keep-existing
+  extra_files:
+    - glob: ./dist/windows/WreckScope-*-windows-amd64-setup.exe
+    - glob: ./dist/windows/SHA256SUMS

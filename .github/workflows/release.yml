@@ -1,0 +1,101 @@
+# Tag → draft GitHub Release with NSIS setup + SHA256SUMS.
+# Does not publish: Monkie edits notes on the draft, then clicks Publish.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build as a draft (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.29.0
+
+      - name: Install Task
+        shell: bash
+        run: go install github.com/go-task/task/v3/cmd/task@latest
+
+      - name: Install Wails CLI v3
+        shell: bash
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
+
+      - name: Install NSIS
+        shell: bash
+        run: choco install nsis -y --no-progress
+
+      - name: Add tools to PATH
+        shell: pwsh
+        run: |
+          $goBin = Join-Path (go env GOPATH) "bin"
+          $nsis = "${env:ProgramFiles(x86)}\NSIS"
+          "PATH=$goBin;$nsis;${env:ProgramFiles}\NSIS;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Resolve version from tag
+        id: ver
+        shell: bash
+        run: |
+          TAG="${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}"
+          TAG="${TAG#refs/tags/}"
+          VER="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Packaging version $VER (tag $TAG)"
+
+      - name: Install UI deps
+        run: pnpm --dir ui install --frozen-lockfile
+
+      - name: Package Windows NSIS installer
+        shell: pwsh
+        run: |
+          .\scripts\package-windows.ps1 -Version "${{ steps.ver.outputs.version }}" -Arch amd64
+
+      - name: Verify release artifacts
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist\windows\WreckScope-*-windows-amd64-setup.exe | Select-Object -First 1
+          if (-not $setup) { throw "missing setup exe under dist\windows" }
+          if (-not (Test-Path dist\windows\SHA256SUMS)) { throw "missing SHA256SUMS" }
+          Write-Host "Artifacts: $($setup.Name), SHA256SUMS"
+
+      - name: GoReleaser (draft release)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
