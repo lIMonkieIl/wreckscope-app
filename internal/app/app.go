@@ -14,6 +14,7 @@ import (
 	"wreckscope/internal/racefeed"
 	"wreckscope/internal/settings"
 	"wreckscope/internal/setup"
+	"wreckscope/internal/update"
 	"wreckscope/internal/wf2"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -36,6 +37,8 @@ type App struct {
 	httpServer *http.Server
 	cancel     context.CancelFunc
 	wg         sync.WaitGroup
+
+	lastUpdate update.Status
 }
 
 func New(assets embed.FS) *App {
@@ -82,6 +85,7 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 		defer a.wg.Done()
 		a.startHTTP(runCtx)
 	}()
+	go a.quietUpdateCheck()
 	return nil
 }
 
