@@ -29,11 +29,11 @@ func MatchSetup(req updater.CheckRequest, assets []github.ReleaseAsset) int {
 }
 
 func isSetupOrInstaller(name string) bool {
+	// Ship only *-setup.*; keep *-installer.* so a misnamed CI asset still matches.
 	return strings.Contains(name, "-setup.") ||
 		strings.Contains(name, "_setup.") ||
 		strings.Contains(name, "-installer.") ||
 		strings.Contains(name, "_installer.") ||
-		name == "installer.exe" ||
 		name == "setup.exe"
 }
 

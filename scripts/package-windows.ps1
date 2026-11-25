@@ -38,10 +38,6 @@ if (-not $Version) { $Version = "0.0.0" }
 
 $outDir = Join-Path $root "dist\windows"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-# Drop leftover portable smoke extract folders from older packages.
-Get-ChildItem $outDir -Directory -ErrorAction SilentlyContinue |
-	Where-Object { $_.Name -like '*portable*' } |
-	Remove-Item -Recurse -Force
 
 Write-Host "Stamping Windows version metadata ($Version)..."
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\stamp-windows-version.ps1") -Version $Version -Root $root

@@ -1,5 +1,4 @@
 import type {
-	AppearanceSettings,
 	DetectionSettings,
 	PhoneAccess,
 	TelemetrySnapshot,
@@ -7,14 +6,6 @@ import type {
 import { hasDesktopBridge, whenDesktopRuntimeReady } from './desktopBridge.ts';
 
 type TelemetryListener = (snapshot: TelemetrySnapshot) => void;
-type SettingsListener = (settings: DetectionSettings) => void;
-
-const settingsListeners = new Set<SettingsListener>();
-
-function publishSettings(settings: DetectionSettings | undefined) {
-	if (!settings) return;
-	for (const listener of settingsListeners) listener(settings);
-}
 
 /** Desktop WebView with native IPC ready (not LAN phone). */
 async function useDesktopBridge(): Promise<boolean> {
@@ -28,7 +19,7 @@ async function loadBindings() {
 	return { app, Events };
 }
 
-async function postJSON(route: 'mode' | 'settings' | 'appearance' | 'medic', payload: unknown) {
+async function postJSON(route: 'mode' | 'settings' | 'medic', payload: unknown) {
 	const response = await fetch('/api/' + route, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -55,15 +46,10 @@ export function subscribeTelemetry(
 				const { app, Events } = await loadBindings();
 				unsubscribe = Events.On('telemetry', (event) => {
 					if (cancelled) return;
-					const snapshot = event.data as TelemetrySnapshot;
-					publishSettings(snapshot.settings);
-					onSnapshot(snapshot);
+					onSnapshot(event.data as TelemetrySnapshot);
 				});
 				const initial = (await app.Snapshot()) as TelemetrySnapshot;
-				if (!cancelled) {
-					publishSettings(initial.settings);
-					onSnapshot(initial);
-				}
+				if (!cancelled) onSnapshot(initial);
 				return;
 			}
 
@@ -78,9 +64,7 @@ export function subscribeTelemetry(
 			stream.onmessage = (event) => {
 				try {
 					if (cancelled) return;
-					const snapshot = JSON.parse(event.data) as TelemetrySnapshot;
-					publishSettings(snapshot.settings);
-					onSnapshot(snapshot);
+					onSnapshot(JSON.parse(event.data) as TelemetrySnapshot);
 				} catch (error) {
 					console.warn('Telemetry snapshot', error);
 				}
@@ -124,67 +108,9 @@ export async function toggleMedic(slot: number): Promise<number[]> {
 export async function saveDetectionSettings(settings: DetectionSettings) {
 	if (await useDesktopBridge()) {
 		const { app } = await loadBindings();
-		const saved = (await app.SaveSettings(settings)) as DetectionSettings;
-		publishSettings(saved);
-		return saved;
+		return (await app.SaveSettings(settings)) as DetectionSettings;
 	}
-	const saved = (await postJSON('settings', settings)) as DetectionSettings;
-	publishSettings(saved);
-	return saved;
-}
-
-export async function getSettings(): Promise<DetectionSettings> {
-	if (await useDesktopBridge()) {
-		const { app } = await loadBindings();
-		return (await app.GetSettings()) as DetectionSettings;
-	}
-	const response = await fetch('/api/settings', { cache: 'no-store' });
-	if (!response.ok) throw new Error((await response.text()).trim() || response.statusText);
-	return (await response.json()) as DetectionSettings;
-}
-
-export async function saveAppearance(appearance: AppearanceSettings) {
-	if (await useDesktopBridge()) {
-		const { app } = await loadBindings();
-		const saved = (await app.SaveAppearance(appearance.theme, appearance.mode)) as DetectionSettings;
-		publishSettings(saved);
-		return;
-	}
-	const saved = (await postJSON('appearance', appearance)) as DetectionSettings;
-	publishSettings(saved);
-}
-
-/** Shared settings. Desktop: Wails events + GetSettings. Phone: GET + SSE. */
-export function subscribeSettings(onSettings: SettingsListener) {
-	let cancelled = false;
-	let unsubscribe: (() => void) | undefined;
-	settingsListeners.add(onSettings);
-
-	(async () => {
-		try {
-			if (await useDesktopBridge()) {
-				if (cancelled) return;
-				const { app, Events } = await loadBindings();
-				unsubscribe = Events.On('settings', (event) => {
-					if (!cancelled) onSettings(event.data as DetectionSettings);
-				});
-				const initial = (await app.GetSettings()) as DetectionSettings;
-				if (!cancelled) onSettings(initial);
-				return;
-			}
-
-			const initial = await getSettings();
-			if (!cancelled) onSettings(initial);
-		} catch (error) {
-			console.warn('Settings subscribe', error);
-		}
-	})();
-
-	return () => {
-		cancelled = true;
-		settingsListeners.delete(onSettings);
-		unsubscribe?.();
-	};
+	return (await postJSON('settings', settings)) as DetectionSettings;
 }
 
 export async function getPhoneAccess(): Promise<PhoneAccess> {

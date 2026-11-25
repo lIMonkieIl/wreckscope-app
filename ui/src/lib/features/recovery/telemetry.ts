@@ -19,11 +19,6 @@ export interface DetectionSettings {
 	telemetryConfigPath?: string;
 }
 
-export interface AppearanceSettings {
-	theme: string;
-	mode: DisplayMode;
-}
-
 /** Packet nests (layout.json / Wreckfest2Structs); flat fields kept for UI. */
 export interface ParticipantLeaderboard {
 	status: number;
