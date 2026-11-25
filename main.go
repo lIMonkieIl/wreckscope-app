@@ -55,8 +55,15 @@ func main() {
 		Title:            "WreckScope",
 		Width:            1280,
 		Height:           800,
+		MinWidth:         900,
+		MinHeight:        600,
+		Frameless:        true,
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		URL:              "/",
+		Windows: application.WindowsWindow{
+			// Lets app-region / --wails-draggable title-bar chrome behave natively.
+			NonClientRegionSupport: true,
+		},
 	})
 
 	if err := wailsApp.Run(); err != nil {

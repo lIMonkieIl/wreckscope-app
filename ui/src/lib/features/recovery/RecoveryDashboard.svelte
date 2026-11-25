@@ -40,6 +40,7 @@
 	import DashSmoke from '#lib/components/DashSmoke.svelte';
 	import BrandMark from '#lib/components/BrandMark.svelte';
 	import BrandWordmark from '#lib/components/BrandWordmark.svelte';
+	import TitleBar from '#lib/components/TitleBar.svelte';
 	import ResponsiveDialogContent from '#lib/components/ResponsiveDialogContent.svelte';
 	import NumberSetting from '#lib/features/settings/NumberSetting.svelte';
 	import ResponsivePicker from '#lib/components/ResponsivePicker.svelte';
@@ -985,94 +986,87 @@
 			onLater={laterUpdateBanner}
 		/>
 	{/if}
-	<header class="race-header">
-		<div class="brandline">
-			<BrandMark class="brand-bull" size={44} />
-			<div class="brand-copy">
-				<BrandWordmark />
-			</div>
-		</div>
-		<div class="header-controls">
-			{#if desktopBridge}
-				<Dialog
-					preventScroll
-					closeOnInteractOutside
-					open={phoneOpen}
-					onOpenChange={({ open }) => showPhone(open)}
-				>
-					<Dialog.Trigger
-						class="btn-icon preset-ghost"
-						aria-label="Device view"
-						title="Device view"><ControlIcon name="device" /></Dialog.Trigger
-					>
-					<ResponsiveDialogContent title="Device view" width="sm:max-w-sm">
-						{#if qrURL}
-							<div class="grid justify-items-center gap-3">
-								<QrCode value={qrURL} encoding={{ ecc: 'H' }} class="grid w-full place-items-center">
-									<QrCode.Frame class="device-qr" aria-label="Phone dashboard QR code">
-										<QrCode.Pattern fill="#090909" />
-									</QrCode.Frame>
-									<QrCode.Overlay
-										class="grid size-8 place-items-center rounded-full border-2 border-white bg-surface-950"
-									>
-										<BrandMark size={22} />
-									</QrCode.Overlay>
-								</QrCode>
-							</div>
-						{:else}<p role="status">{qrStatus}</p>{/if}
-					</ResponsiveDialogContent>
-				</Dialog>
-			{/if}
+	{#snippet chromeActions()}
+		{#if desktopBridge}
 			<Dialog
 				preventScroll
 				closeOnInteractOutside
-				open={settingsOpen}
-				onOpenChange={({ open }) => editSettings(open)}
+				open={phoneOpen}
+				onOpenChange={({ open }) => showPhone(open)}
 			>
-				<Dialog.Trigger class="btn-icon preset-ghost" aria-label="Settings" title="Settings"
-					><ControlIcon name="settings" /></Dialog.Trigger
+				<Dialog.Trigger
+					class="btn-icon preset-ghost"
+					aria-label="Device view"
+					title="Device view"><ControlIcon name="device" /></Dialog.Trigger
 				>
-				<ResponsiveDialogContent
-					title={settingsDialogTitle}
-					width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
-				>
-					{#snippet headerEnd()}
-						{#if desktopBridge}
-							<UpdateHeaderControls
-								phase={settingsUpdatePhase}
-								versionLabel={settingsVersionLabel}
-								latest={updateStatus?.latest || ''}
-								errorTitle={updateApplyError}
-								onCheck={() => void runUpdateCheck()}
-								onDownload={() => void runUpdateApply()}
-							/>
-						{:else}
-							<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
-								{settingsVersionLabel}
-							</p>
-						{/if}
-					{/snippet}
-					<div class="@container min-w-0 w-full">
-					{#if firstRunSetup}
-						<p class="mb-5 text-sm text-surface-700-300">
-							Connect Wreckfest 2 telemetry so the live feed can start. Find or choose the game’s
-							<code class="font-mono text-xs">config.json</code>, then Configure if needed.
+				<ResponsiveDialogContent title="Device view" width="sm:max-w-sm">
+					{#if qrURL}
+						<div class="grid justify-items-center gap-3">
+							<QrCode value={qrURL} encoding={{ ecc: 'H' }} class="grid w-full place-items-center">
+								<QrCode.Frame class="device-qr" aria-label="Phone dashboard QR code">
+									<QrCode.Pattern fill="#090909" />
+								</QrCode.Frame>
+								<QrCode.Overlay
+									class="grid size-8 place-items-center rounded-full border-2 border-white bg-surface-950"
+								>
+									<BrandMark size={22} />
+								</QrCode.Overlay>
+							</QrCode>
+						</div>
+					{:else}<p role="status">{qrStatus}</p>{/if}
+				</ResponsiveDialogContent>
+			</Dialog>
+		{/if}
+		<Dialog
+			preventScroll
+			closeOnInteractOutside
+			open={settingsOpen}
+			onOpenChange={({ open }) => editSettings(open)}
+		>
+			<Dialog.Trigger class="btn-icon preset-ghost" aria-label="Settings" title="Settings"
+				><ControlIcon name="settings" /></Dialog.Trigger
+			>
+			<ResponsiveDialogContent
+				title={settingsDialogTitle}
+				width="sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl"
+			>
+				{#snippet headerEnd()}
+					{#if desktopBridge}
+						<UpdateHeaderControls
+							phase={settingsUpdatePhase}
+							versionLabel={settingsVersionLabel}
+							latest={updateStatus?.latest || ''}
+							errorTitle={updateApplyError}
+							onCheck={() => void runUpdateCheck()}
+							onDownload={() => void runUpdateApply()}
+						/>
+					{:else}
+						<p class="truncate text-xs text-surface-700-300" title={settingsVersionLabel}>
+							{settingsVersionLabel}
 						</p>
 					{/if}
-					<div class="grid min-w-0 gap-6 @[48rem]:grid-cols-2 @[48rem]:gap-8">
-						<div class="min-w-0 space-y-6">
-							{#if desktopBridge}
-								<section
-									bind:this={configSectionEl}
-									class="config-section min-w-0 space-y-3"
-									class:opacity-60={configBusy}
-									class:needs-attention={configHighlighted}
+				{/snippet}
+				<div class="@container min-w-0 w-full">
+				{#if firstRunSetup}
+					<p class="mb-5 text-sm text-surface-700-300">
+						Connect Wreckfest 2 telemetry so the live feed can start. Find or choose the game’s
+						<code class="font-mono text-xs">config.json</code>, then Configure if needed.
+					</p>
+				{/if}
+				<div class="grid min-w-0 gap-6 @[48rem]:grid-cols-2 @[48rem]:gap-8">
+					<div class="min-w-0 space-y-6">
+						{#if desktopBridge}
+							<section
+								bind:this={configSectionEl}
+								class="config-section min-w-0 space-y-3"
+								class:opacity-60={configBusy}
+								class:needs-attention={configHighlighted}
+							>
+								<header
+									class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
 								>
-									<header
-										class="flex items-center gap-2 border-b border-surface-300-700/60 pb-1.5 text-sm font-semibold"
-									>
-										{firstRunSetup ? 'Connect telemetry' : 'Config'}
-									</header>
+									{firstRunSetup ? 'Connect telemetry' : 'Config'}
+								</header>
 									<div class="min-w-0" inert={configBusy || undefined}>
 										<span class="mb-1 flex items-center gap-1.5 text-sm font-semibold">
 											{firstRunSetup
@@ -1341,8 +1335,22 @@
 					{#if notice}<p role="alert" class="mt-4 text-sm text-error-700-300">{notice}</p>{/if}
 				</ResponsiveDialogContent>
 			</Dialog>
-		</div>
-	</header>
+	{/snippet}
+	{#if desktopBridge}
+		<TitleBar actions={chromeActions} />
+	{:else}
+		<header class="race-header">
+			<div class="brandline">
+				<BrandMark class="brand-bull" size={44} />
+				<div class="brand-copy">
+					<BrandWordmark />
+				</div>
+			</div>
+			<div class="header-controls">
+				{@render chromeActions()}
+			</div>
+		</header>
+	{/if}
 	<main class="race-content" class:is-smoked={configSmoke} aria-hidden={configSmoke && !settingsOpen}>
 		{#if notice && !settingsOpen}<p role="alert">{notice}</p>{/if}
 
