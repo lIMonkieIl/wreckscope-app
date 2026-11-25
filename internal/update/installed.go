@@ -62,6 +62,9 @@ func applyInstalled(ctx context.Context, app *application.App, out Status) (Stat
 		out.Message = err.Error()
 		return out, err
 	}
+	// Best-effort: installer may still hold the file briefly; startup ClearStaged
+	// sweeps leftovers after the new build is running.
+	_ = os.Remove(dest)
 
 	out.Message = "Opened installer " + rel.Version
 	go func() {
@@ -79,6 +82,8 @@ func downloadSetup(ctx context.Context, gh *github.Provider, rel *updater.Releas
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", fmt.Errorf("updater: create updates dir: %w", err)
 	}
+	// Drop leftover staged installers before a new download.
+	_ = clearDirFiles(dir)
 
 	name := filepath.Base(rel.Artifact.Filename)
 	if name == "" || name == "." || name == string(filepath.Separator) {

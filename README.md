@@ -54,7 +54,7 @@ Outputs under `dist\windows\`:
 - `WreckScope-<ver>-windows-amd64-setup.exe` — NSIS installer
 - `SHA256SUMS` — checksums for the GitHub updater
 
-Publish both on a GitHub Release. In-app updates download the setup package to `%AppData%\WreckScope\updates\`, open it, then quit.
+Publish both on a GitHub Release. In-app updates download the setup package to `%AppData%\WreckScope\updates\`, open it, then quit. Staged installers are removed after launch when possible, and any leftovers are cleared on the next app start.
 
 Binary-only (no installer):
 
@@ -72,7 +72,7 @@ Everything else under `%AppData%\WreckScope\`:
 
 - `settings.json` — app settings (survives upgrade; uninstall removes this folder)
 - `webview\` — WebView2 profile
-- `updates\` — downloaded setup packages for in-app update
+- `updates\` — temporary staging for in-app update downloads (cleared after launch / on next start)
 
 First-run with no `settings.json` seeds theme `wreckscope` and mode `system`. Upgrading over an existing install keeps the previous settings.
 

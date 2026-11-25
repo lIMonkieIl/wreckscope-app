@@ -72,6 +72,9 @@ func (a *App) ServiceStartup(ctx context.Context, _ application.ServiceOptions) 
 		log.Printf("Load settings: %v", err)
 	}
 	a.migrateLegacyTelemetryPath()
+	if err := update.ClearStaged(); err != nil {
+		log.Printf("Clear staged updates: %v", err)
+	}
 
 	a.wg.Add(4)
 	go func() {
